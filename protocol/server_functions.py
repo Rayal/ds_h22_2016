@@ -1,5 +1,5 @@
 from protocol.common import *
-from server.server_obj import new_client
+#from server.server_obj import new_client
 
 def message_in(client, topic_list, payload_list):
     print "Received message of type %s"% payload_list[0]
