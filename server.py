@@ -50,6 +50,9 @@ class Server():
             return True
         return False
 
+    def get_game_list(self):
+        game_list = [game.to_str() for game in self.games]
+        return OBJ_SEP.join(game_list)
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.
 # Other loop*() functions are available that give a threaded interface and a
