@@ -1,27 +1,4 @@
-import paho.mqtt.client as mqtt
-import protocol.server_protocol as sp
-from protocol.common import *
+from server.server_obj import Server_CLASS
 
-# The callback for when the client receives a CONNACK response from the server.
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code "+str(rc))
-
-    # Subscribing in on_connect() means that if we lose the connection and
-    # reconnect then subscriptions will be renewed.
-    client.subscribe("/".join((DEFAULT_ROOT_TOPIC, GLOBAL)))
-
-# The callback for when a PUBLISH message is received from the server.
-def on_message(client, userdata, msg):
-    print(msg.topic+" "+str(msg.payload))
-
-client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = sp.message_in
-
-client.connect(DEFAULT_SERVER_URL, DEFAULT_SERVER_PORT)
-
-# Blocking call that processes network traffic, dispatches callbacks and
-# handles reconnecting.
-# Other loop*() functions are available that give a threaded interface and a
-# manual interface.
-client.loop_forever()
+gl_server = Server_CLASS()
+gl_server.start()
