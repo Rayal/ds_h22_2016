@@ -8,19 +8,26 @@ from protocol.common import *
 #from server.server_obj import new_client
 
 def message_in(server_obj, client, topic_list, payload_list):
-    LOG.info("Received message of type %s"% payload_list[0])
-    if payload_list[0] == CONN_REQ:
+    if payload_list[0] in SERVER_TYPES:
+        LOG.info("Received message of type %s"% SERVER_TYPES[payload_list[0]])
+    else:
+        LOG.debug("Received message of unknown type")
+        return
+
+    if payload_list[0] == CONN_REQ and len(payload_list) >= 3:
         conn_req(server_obj, client, payload_list[1:])
 
-    elif payload_list[0] == GAME_LIST_REQ:
+    elif payload_list[0] == GAME_LIST_REQ and len(payload_list) >= 2:
         game_list_req(server_obj, client, payload_list[1:])
 
-    elif payload_list[0] == JOIN_GAME:
+    elif payload_list[0] == JOIN_GAME and len(payload_list) >= 3:
         join_game(server_obj, client, payload_list[1:])
 
-    elif payload_list[0] == CREATE_GAME:
+    elif payload_list[0] == CREATE_GAME and len(payload_list) >= 2:
         create_game(server_obj, client, payload_list[1:])
 
+    else:
+        LOG.debug("Received message was too short.")
 
 
 def conn_req (server_obj, mqtt, args):
@@ -45,7 +52,11 @@ def create_game(server_obj, mqtt, args):
     response = server_obj.create_game(game_name, client)
     if response == 0:
         # Game of that name already exists
-        mqtt.publish("/".join((DEFAULT_ROOT_TOPIC, SERVER, client)), NAY)
+        msg_topic = "/".join((DEFAULT_ROOT_TOPIC, SERVER, client))
+        msg_payload = NAY
+        LOG.debug("Sending: %s - %s" % (msg_topic, msg_payload))
+        mqtt.publish(msg_topic, msg_payload)
+
     elif response == -1:
         # Server is full of games
         mqtt.publish("/".join((DEFAULT_ROOT_TOPIC, SERVER, client)), NAY)
