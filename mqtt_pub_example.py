@@ -6,7 +6,8 @@ def on_connect(client, userdata, flags, rc):
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    client.subscribe("undo/#")
+    client.subscribe("undo/derp/ack")
+    client.publish("undo/derp", "Hi!")
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
@@ -14,6 +15,7 @@ def on_message(client, userdata, msg):
 
 client = mqtt.Client()
 client.on_connect = on_connect
-client.connect("iot.eclipse.org", 1883, 60)
+client.on_message = on_message
 
-client.publish("undo", "Hi!")
+client.connect("iot.eclipse.org", 1883, 60)
+client.loop_forever()
