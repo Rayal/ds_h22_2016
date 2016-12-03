@@ -20,4 +20,3 @@ def message_in(server_obj, client, userdata, msg):
             sf.message_in(server_obj, client, topic[1:], msg.payload.split(" "))
 
 
-#def sound_off(client):
