@@ -11,6 +11,9 @@ SELF = name + str(getpid())
 
 # GLOBAL MESSAGE TYPES
 SOUND_OFF =       '00'
+GLOBAL_TYPES = {
+    SOUND_OFF: "SOUND_OFF"
+}
 
 # SERVER MESSAGE TYPES
 CONN_REQ =        '10'
@@ -19,6 +22,14 @@ GAME_LIST =       '12'
 JOIN_GAME =       '13'
 CREATE_GAME =     '14'
 DISCONNECT =      '15'
+SERVER_TYPES = {
+    CONN_REQ:       "CONN_REQ",
+    GAME_LIST_REQ:  "GAME_LIST_REQ",
+    GAME_LIST:      "GAME_LIST",
+    JOIN_GAME:      "JOIN_GAME",
+    CREATE_GAME:    "CREATE_GAME",
+    DISCONNECT:     "DISCONNECT"
+}
 
 # GAME MESSAGE TYPES
 GAME_SETUP =      '200'
@@ -34,6 +45,21 @@ GAME_OVER =       '209'
 REPLAY_GAME =     '210'
 GAME_END =        '211'
 DISCONNECT =      '212'
+GAME_TYPES = {
+    GAME_SETUP:     "GAME_SETUP",
+    SHIP_POS:       "SHIP_POS",
+    WAIT_FOR_START: "WAIT_FOR_START",
+    START_GAME:     "START_GAME",
+    PLAY_TURN:      "PLAY_TURN",
+    SHOOT:          "SHOOT",
+    SPLASH:         "SPLASH",
+    BOOM:           "BOOM",
+    SUNK:           "SUNK",
+    GAME_OVER:      "GAME_OVER",
+    REPLAY_GAME:    "REPLAY_GAME",
+    GAME_END:       "GAME_END",
+    DISCONNECT:     "DISCONNECT"
+}
 
 #YEA AND NAY
 YEA = "YEA"

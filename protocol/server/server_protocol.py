@@ -18,5 +18,8 @@ def message_in(server_obj, client, userdata, msg):
             wf.message_in(server_obj, client, topic[1:], msg.payload.split(" "))
         elif topic[0] == SERVER:
             sf.message_in(server_obj, client, topic[1:], msg.payload.split(" "))
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 58f3474dc61450493aad78abfa64d67ca4d7c034
