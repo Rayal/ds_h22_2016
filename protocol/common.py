@@ -18,6 +18,7 @@ GAME_LIST_REQ =   '11'
 GAME_LIST =       '12'
 JOIN_GAME =       '13'
 CREATE_GAME =     '14'
+DISCONNECT =      '15'
 
 # GAME MESSAGE TYPES
 GAME_SETUP =      '200'
@@ -32,6 +33,7 @@ SUNK =            '208'
 GAME_OVER =       '209'
 REPLAY_GAME =     '210'
 GAME_END =        '211'
+DISCONNECT =      '212'
 
 #YEA AND NAY
 YEA = "YEA"
