@@ -5,8 +5,8 @@ logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 
 from protocol.common import *
-import protocol.client.global_functions as wf
-import protocol.client.server_functions as sf
+import protocol.client.global_functions as gf
+import protocol.client.client_functions as cf
 
 def message_in(client_obj, mqttclient, userdata, msg):
     if not msg.topic.startswith(DEFAULT_ROOT_TOPIC + "/"):
@@ -15,8 +15,8 @@ def message_in(client_obj, mqttclient, userdata, msg):
     if topic[0] in CATEGORIES:
         LOG.info("Received message from %s topic"%CATEGORIES[topic[0]])
         if topic[0] == GLOBAL:
-            wf.message_in(client_obj, mqttclient, topic[1:], msg.payload.split(" "))
+            gf.message_in(client_obj, mqttclient, topic[1:], msg.payload.split(" "))
         elif topic[0] == SERVER:
-            sf.message_in(client_obj, mqttclient, topic[1:], msg.payload.split(" "))
+            cf.message_in(client_obj, mqttclient, topic[1:], msg.payload.split(" "))
 
 
