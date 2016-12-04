@@ -20,6 +20,8 @@ class Server():
         self.nicknames = []
 
         self.games = []
+        self.open_games = []
+        self.closed_games = []
         self.free_IDs = range(1, 1000)
         rnd.shuffle(self.free_IDs)
 
@@ -65,23 +67,43 @@ class Server():
         return OBJ_SEP.join(game_list)
 
     def create_game(self, name, client):
-        if name in [game.name for game in self.games]:
-            return 0
-
         if not len(self.free_IDs):
             return -1
-
         if not client in self.clients:
             return -2
 
         player = self.nicknames[self.clients.index(client)]
         new_game = Game(self, name, player, self.free_IDs.pop(0), client)
         self.games.append(new_game)
+        self.open_games.append(new_game)
 
         self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GAME, SELF, str(new_game.id))))
         self.sub_to_topics()
 
         return new_game.id
+
+    def join_game(self, g_id, client):
+        game_ids = [str(game.id) for game in self.open_games]
+        print(g_id + "; ", game_ids)
+        if not g_id in game_ids:
+            return -1
+        if not client in self.clients:
+            return -2
+
+        player = self.nicknames[self.clients.index(client)]
+        game = self.open_games[game_ids.index(g_id)]
+
+        res = game.add_player(player)
+        if res != 0:
+            self.open_games.remove(game)
+            self.closed_games.append(game)
+
+        if res >= 0:
+            LOG.debug("Player %s joined game %s:%d"%(player, game.name, game.id))
+            return game.id
+
+        return 0
+
 
 server = Server()
 server.start()

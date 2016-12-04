@@ -17,6 +17,6 @@ class Game():
         return 0
 
     def to_str(self):
-        name = self.name + SUB_OBY_SEP
+        name = "%d:%s%s" % (self.id, self.name, SUB_OBY_SEP)
         name += SUB_OBY_SEP.join(self.players)
         return name

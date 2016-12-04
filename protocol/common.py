@@ -1,5 +1,12 @@
 """This file contains values that both the client and server require"""
 
+# Setup Python logging --------------------------------------------------------
+import logging
+FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
+logging.basicConfig(level=logging.DEBUG,format=FORMAT)
+LOG = logging.getLogger()
+
+
 from os import getpid, name
 
 DEFAULT_SERVER_PORT = 1883
@@ -77,3 +84,8 @@ CATEGORIES = {  GLOBAL:   "GLOBAL",
 #SEPARATORS
 OBJ_SEP =       chr(30)
 SUB_OBY_SEP =   chr(31)
+
+
+def mqtt_publish(mqtt_client, topic, payload = None, retain = False):
+    LOG.debug("Sending: %s - %s" % (topic, payload))
+    mqtt_client.publish(topic, payload, retain = retain)

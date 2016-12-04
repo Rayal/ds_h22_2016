@@ -20,5 +20,4 @@ def message_in(server_obj, client, topic_list, payload_list):
 
 
 def sound_off(mqtt, client):
-    mqtt.publish("/".join((DEFAULT_ROOT_TOPIC, GLOBAL, client)),\
-    " ".join((SOUND_OFF,SELF)))
+    mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GLOBAL, client)), " ".join((SOUND_OFF,SELF)))
