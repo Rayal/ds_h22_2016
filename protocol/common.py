@@ -83,7 +83,7 @@ CATEGORIES = {  GLOBAL:   "GLOBAL",
 
 #SEPARATORS
 OBJ_SEP =       chr(30)
-SUB_OBY_SEP =   chr(31)
+SUB_OBJ_SEP =   chr(31)
 
 
 def mqtt_publish(mqtt_client, topic, payload = None, retain = False):
