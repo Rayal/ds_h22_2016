@@ -27,13 +27,14 @@ import random as rnd
 
 # Client Class-----------------------------------------------------------------
 class Client():
-
-    def __init__(self, nickname, client, clientID):
+    def __init__(self, clientID, nickname):
         self.name = name
         self.nickname = nickname
         self.clientID = clientID
         self.client = mqtt.Client()
-        self.nickname = nickname
+
+        self.clientIDs = range(1, 1000)
+        rnd.shuffle(self.clientIDs)
 
         self.__on_recv = None
         self.__on_published = None
@@ -45,13 +46,27 @@ class Client():
         self.client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
         self.client.on_message = lambda client, userdata, msg: cp.message_in(self, client, userdata, msg)
 
-        def on_connect(self, client, userdata, flags, rc):
-            LOG.info("Connected with result code " + str(rc))
+    def on_connect(self, client, userdata, flags, rc):
+        LOG.info("Connected with result code " + str(rc))
+
+    def connection_request(self, clientID, nickname):
+        if cf.conn_req(self, mqtt, clientID, nickname) == "YEA":
+            LOG.info("Connection Successful")
+        elif cf.conn_req(self, mqtt, clientID, nickname) == "NAY":
+            LOG.debug("Connection Not Successful")
 
 
-        #soundoff
-        client.conn_req(self, mqtt, clientID, nickname)
+    def get_game_list_request(self, clientID):
+        game_list = cf.game_list_req(self, mqtt, clientID)
+        LOG.debug("Gamelist %s" %game_list)
 
+
+    def join_exist_game(self, clientID, game_id):
+        cf.join_game(self, mqtt, clientID, game_id)
+
+    def create_new_game(self, clientID, game_name):
+        game_name = raw_input("Enter game name for the new game")
+        cf.create_game(self, mqtt, clientID, game_name)
 
 
 
@@ -80,10 +95,10 @@ if __name__ == '__main__':
 
    # if c.connect(('127.0.0.1',7777)):
 
-        t = Thread()
-        t.start()
-
-        c.loop()
-        t.join()
+        # t = Thread()
+        # t.start()
+        #
+        # c.loop()
+        # t.join()
 
     logging.info('Terminating')
