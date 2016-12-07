@@ -48,36 +48,57 @@ def message_in(server_obj, client, topic_list, payload_list):
     else:
         LOG.debug("Received message was too short.")
 
-    def game_setup(server_obj, mqtt_client, topic_list, payload_list):
-        response = server_obj.game_setup(topic_list[0], payload_list)
-        #TODO: respond to client.
-    def ship_pos(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def ready_to_start(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def start_game(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def play_turn(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def shoot(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def splash(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def boom(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def hit(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def sunk(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def game_over(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def replay_game(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def game_end(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def disconnect(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def reconnect(server_obj, mqtt_client, topic_list, payload_list):
-        pass
-    def new_host(server_obj, mqtt_client, topic_list, payload_list):
-        pass
+def game_setup(server_obj, mqtt_client, topic_list, payload_list):
+    response = server_obj.game_setup(topic_list[0], payload_list)
+    if response == -1:
+        LOG.debug("Argument list too short.")
+        mqtt_publish(mqtt_client, "/".join((DEFAULT_ROOT_TOPIC, GAME, SELF, topic_list[0], "ACK")), NAY)
+    elif response == -2:
+        LOG.debug("Game %s not found."%topic_list[0])
+        mqtt_publish(mqtt_client, "/".join((DEFAULT_ROOT_TOPIC, GAME, SELF, topic_list[0], "ACK")), NAY)
+    elif response == -3:
+        LOG.debug("Client %s not connected to server."%payload_list[0])
+        mqtt_publish(mqtt_client, "/".join((DEFAULT_ROOT_TOPIC, GAME, SELF, topic_list[0], "ACK")), NAY)
+    elif response == -4:
+        LOG.debug("Client %s is not the creator for the game %s."%(payload_list[0], topic_list[0]))
+        mqtt_publish(mqtt_client, "/".join((DEFAULT_ROOT_TOPIC, GAME, SELF, topic_list[0], "ACK")), NAY)
+    elif response == -5:
+        LOG.debug("Unable to set config: %s."%" ".join(payload_list[1:]))
+        mqtt_publish(mqtt_client, "/".join((DEFAULT_ROOT_TOPIC, GAME, SELF, topic_list[0], "ACK")), NAY)
+    elif response == 0:
+        LOG.debug("Game config set: %s."%" ".join(payload_list[1:]))
+        mqtt_publish(mqtt_client, "/".join((DEFAULT_ROOT_TOPIC, GAME, SELF, topic_list[0], "ACK")), "%s %s"%(GAME_SETUP, " ".join(payload_list[1:])), True)
+    else:
+        LOG.debug("Unknown server response.")
+        mqtt_publish(mqtt_client, "/".join((DEFAULT_ROOT_TOPIC, GAME, SELF, topic_list[0], "ACK")), NAY)
+
+def ship_pos(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def ready_to_start(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def start_game(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def play_turn(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def shoot(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def splash(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def boom(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def hit(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def sunk(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def game_over(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def replay_game(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def game_end(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def disconnect(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def reconnect(server_obj, mqtt_client, topic_list, payload_list):
+    pass
+def new_host(server_obj, mqtt_client, topic_list, payload_list):
+    pass

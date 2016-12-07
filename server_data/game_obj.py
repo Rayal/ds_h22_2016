@@ -1,5 +1,6 @@
 from protocol.common import *
 import numpy as np
+from collections import defaultdict
 
 def get_ship(size, initial, orientation, world):
     x1, y1 = initial
@@ -39,11 +40,14 @@ class Game():
 
     def configure(self, size, ship_list):
         ship_list = np.array(ship_list).astype(int)
+        size = np.array(size).astype(int)
         if sum(ship_list) > 2 * np.prod(size) / 3:
-            return 0
-        
+            return False
+
         board = np.zeros(size)
         self.ship_list = defaultdict(int)
 
         for ship in ship_list:
             self.ship_list[ship] += 1
+
+        return True

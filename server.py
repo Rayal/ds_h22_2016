@@ -109,17 +109,26 @@ class Server():
         return games_list[game_ids.index(game_id)]
 
     def game_setup(self, game_id, args_list):
-        game = game_from_id(game_id, self.open_games)
-        if not game:
+        if len(args_list) < 4:
             return -1
+
+        game = self.game_from_id(game_id, self.open_games)
+        if not game:
+            return -2
 
         client_name = args_list[0]
         if not client_name in self.clients:
-            return -2
+            return -3
 
-        player = self.nicknames[self.clients.index(client)]
+        if game.client != client_name:
+            return -4
 
+        size_x, size_y = args_list[1:3]
+        ship_list = args_list[3:]
 
+        if game.configure((size_x, size_y), ship_list):
+            return 0
+        return -5
 
     def ship_pos(self, game_id, args_list):
         pass
