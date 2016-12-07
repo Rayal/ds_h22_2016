@@ -83,7 +83,7 @@ class Server():
         return new_game.id
 
     def join_game(self, g_id, client):
-        game = self.game_from_id(g_it, self.open_games) #TODO: Test later
+        game = self.game_from_id(g_id, self.open_games) #TODO: Test later
         if not game:
             return -1
         if not client in self.clients:

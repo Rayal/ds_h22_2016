@@ -64,14 +64,14 @@ GAME_TYPES = {
     SHOOT:          "SHOOT",
     SPLASH:         "SPLASH",
     BOOM:           "BOOM",
-    HIT:            "HIT"
+    HIT:            "HIT",
     SUNK:           "SUNK",
     GAME_OVER:      "GAME_OVER",
     REPLAY_GAME:    "REPLAY_GAME",
     GAME_END:       "GAME_END",
     DISCONNECT:     "DISCONNECT",
-    RECONNECT       "RECONNECT",
-    NEW_HOST        "NEW_HOST"
+    RECONNECT:       "RECONNECT",
+    NEW_HOST:        "NEW_HOST"
 }
 
 #YEA AND NAY
