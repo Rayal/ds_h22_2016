@@ -83,15 +83,13 @@ class Server():
         return new_game.id
 
     def join_game(self, g_id, client):
-        game_ids = [str(game.id) for game in self.open_games]
-        print(g_id + "; ", game_ids)
-        if not g_id in game_ids:
+        game = self.game_from_id(g_id, self.open_games) #TODO: Test later
+        if not game:
             return -1
         if not client in self.clients:
             return -2
 
         player = self.nicknames[self.clients.index(client)]
-        game = self.open_games[game_ids.index(g_id)]
 
         res = game.add_player(player)
         if res != 0:
@@ -103,6 +101,79 @@ class Server():
             return game.id
 
         return 0
+
+    def game_from_id(self, game_id, games_list):
+        game_ids = [str(game.id) for game in games_list]
+        if not game_id in game_ids:
+            return None
+        return games_list[game_ids.index(game_id)]
+
+    def game_setup(self, game_id, args_list):
+        if len(args_list) < 4:
+            return -1
+
+        game = self.game_from_id(game_id, self.open_games)
+        if not game:
+            return -2
+
+        client_name = args_list[0]
+        if not client_name in self.clients:
+            return -3
+
+        if game.client != client_name:
+            return -4
+
+        size_x, size_y = args_list[1:3]
+        ship_list = args_list[3:]
+
+        if game.configure((size_x, size_y), ship_list):
+            return 0
+        return -5
+
+    def ship_pos(self, game_id, args_list):
+        pass
+
+    def ready_to_start(self, game_id, args_list):
+        pass
+
+    def start_game(self, game_id, args_list):
+        pass
+
+    def play_turn(self, game_id, args_list):
+        pass
+
+    def shoot(self, game_id, args_list):
+        pass
+
+    def splash(self, game_id, args_list):
+        pass
+
+    def boom(self, game_id, args_list):
+        pass
+
+    def hit(self, game_id, args_list):
+        pass
+
+    def sunk(self, game_id, args_list):
+        pass
+
+    def game_over(self, game_id, args_list):
+        pass
+
+    def replay_game(self, game_id, args_list):
+        pass
+
+    def game_end(self, game_id, args_list):
+        pass
+
+    def disconnect(self, game_id, args_list):
+        pass
+
+    def reconnect(self, game_id, args_list):
+        pass
+
+    def new_host(self, game_id, args_list):
+        pass
 
 
 server = Server()

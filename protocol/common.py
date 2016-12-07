@@ -41,31 +41,37 @@ SERVER_TYPES = {
 # GAME MESSAGE TYPES
 GAME_SETUP =      '200'
 SHIP_POS =        '201'
-WAIT_FOR_START =  '202'
+READY_TO_START =  '202'
 START_GAME =      '203'
 PLAY_TURN =       '204'
 SHOOT =           '205'
 SPLASH =          '206'
 BOOM =            '207'
-SUNK =            '208'
-GAME_OVER =       '209'
-REPLAY_GAME =     '210'
-GAME_END =        '211'
-DISCONNECT =      '212'
+HIT =             '208'
+SUNK =            '209'
+GAME_OVER =       '210'
+REPLAY_GAME =     '211'
+GAME_END =        '212'
+DISCONNECT =      '213'
+RECONNECT =       '214'
+NEW_HOST =        '215'
 GAME_TYPES = {
     GAME_SETUP:     "GAME_SETUP",
     SHIP_POS:       "SHIP_POS",
-    WAIT_FOR_START: "WAIT_FOR_START",
+    READY_TO_START: "READY_TO_START",
     START_GAME:     "START_GAME",
     PLAY_TURN:      "PLAY_TURN",
     SHOOT:          "SHOOT",
     SPLASH:         "SPLASH",
     BOOM:           "BOOM",
+    HIT:            "HIT",
     SUNK:           "SUNK",
     GAME_OVER:      "GAME_OVER",
     REPLAY_GAME:    "REPLAY_GAME",
     GAME_END:       "GAME_END",
-    DISCONNECT:     "DISCONNECT"
+    DISCONNECT:     "DISCONNECT",
+    RECONNECT:       "RECONNECT",
+    NEW_HOST:        "NEW_HOST"
 }
 
 #YEA AND NAY

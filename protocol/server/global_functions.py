@@ -6,7 +6,7 @@ LOG = logging.getLogger()
 
 from protocol.common import *
 
-def message_in(server_obj, client, topic_list, payload_list):
+def message_in(server_obj, client, payload_list):
     if payload_list[0] in GLOBAL_TYPES:
         LOG.info("Received message of type %s"% GLOBAL_TYPES[payload_list[0]])
     else:
