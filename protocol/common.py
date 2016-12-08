@@ -91,6 +91,14 @@ CATEGORIES = {  GLOBAL:   "GLOBAL",
 OBJ_SEP =       chr(30)
 SUB_OBJ_SEP =   chr(31)
 
+#SHIP POSITIONS:
+HORIZONTAL =    "0"
+VERTICAL =      "1"
+SHIP_POSITIONS = {
+    HORIZONTAL: "HORIZONTAL",
+    VERTICAL:   "VERTICAL"
+}
+
 
 def mqtt_publish(mqtt_client, topic, payload = None, retain = False):
     LOG.debug("Sending: %s - %s" % (topic, payload))

@@ -112,7 +112,7 @@ class Server():
         if len(args_list) < 4:
             return -1
 
-        game = self.game_from_id(game_id, self.open_games)
+        game = self.game_from_id(game_id, self.games)
         if not game:
             return -2
 
@@ -120,7 +120,7 @@ class Server():
         if not client_name in self.clients:
             return -3
 
-        if game.client != client_name:
+        if game.client != client_name: # Not necessary to do this here. We could also do this in game_obj. But it IS necessary to do it somewhere.
             return -4
 
         size_x, size_y = args_list[1:3]
@@ -131,7 +131,24 @@ class Server():
         return -5
 
     def ship_pos(self, game_id, args_list):
-        pass
+        if len(args_list) < 2:
+            return -1
+
+        game = self.game_from_id(game_id, self.games)
+        if not game:
+            return -2
+
+        client_name = args_list[0]
+        if not client_name in self.clients:
+            return -3
+
+        player = self.nicknames[self.clients.index(client)]
+
+        res = game.set_ships(player, args_list[1])
+
+        if res: # set_ships already gives different return codes. Make sure they don't clash with this method's.
+            res -= 3
+        return res
 
     def ready_to_start(self, game_id, args_list):
         pass

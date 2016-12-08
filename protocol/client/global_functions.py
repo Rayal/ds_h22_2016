@@ -13,6 +13,6 @@ def message_in(client_obj, client, topic_list, payload_list):
         sound_off(client, payload_list[1])
 
 def sound_off(mqtt, client):
-    print("Clients connected %s" %client)
+    print("Servers online: %s" %client)
     #mqtt.publish("/".join((DEFAULT_ROOT_TOPIC, GLOBAL, client)),\
     #" ".join((SOUND_OFF,SELF)))
