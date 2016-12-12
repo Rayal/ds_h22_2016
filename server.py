@@ -23,7 +23,8 @@ class Server():
         self.open_games = []
         self.closed_games = []
         self.free_IDs = range(1, 1000)
-        rnd.shuffle(self.free_IDs)
+        if not DEBUG:
+            rnd.shuffle(self.free_IDs)
 
         self.client = mqtt.Client()
         self.client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)

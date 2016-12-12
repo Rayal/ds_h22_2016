@@ -3,6 +3,9 @@ from sys import argv
 from protocol.common import *
 from time import sleep
 
+if DEBUG:
+	SELF = "TEST"
+
 topics = []
 topics.append("/".join((DEFAULT_ROOT_TOPIC, GLOBAL, SELF)))
 client = mqtt.Client()
@@ -78,7 +81,7 @@ def init(client, msg):
 	if msg == None:
 		mqtt_publish(client, "/".join((DEFAULT_ROOT_TOPIC, GLOBAL)), " ".join((SOUND_OFF, SELF)))
 
-	elif "posix" in msg.payload:
+	elif "posix" in msg.payload or "DEBUG_SERVER" in msg.payload:
 		global server
 		server = msg.payload.split(" ")[-1]
 		return True
