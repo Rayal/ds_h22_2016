@@ -8,7 +8,7 @@ from protocol.common import *
 #from server.client_obj import new_client
 
 def message_in(client_obj, client, topic_list, payload_list):
-    LOG.info("Received message of type %s"% payload_list[0])
+    LOG.info("Received message of type %s"% SERVER_TYPES[payload_list[0]])
     if payload_list[0] == CONN_REQ:
         conn_req(client_obj, client, payload_list[1:])
 
@@ -24,12 +24,8 @@ def message_in(client_obj, client, topic_list, payload_list):
 
 
 def conn_req (client_obj, mqtt, args):
-    nick = args[1]
-    client = args[0]
-    if client_obj.new_client(client, nick):
-        mqtt.publish("/".join((DEFAULT_ROOT_TOPIC, SERVER, client)), YEA)
-    else:
-        mqtt.publish("/".join((DEFAULT_ROOT_TOPIC, SERVER, client)), NAY)
+    LOG.debug("Received message: %s"%args[0])
+    client_obj.conn_req(args)
 
 def game_list_req(client_obj, mqtt, args):
     client = args[0]
@@ -72,5 +68,3 @@ def create_game(client_obj, mqtt, args):
         # The response is the game id, in int
         mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, client)), str(response))
         mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GAME, SELF, str(response))), YEA, True)
-
-

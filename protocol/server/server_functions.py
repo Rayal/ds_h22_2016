@@ -34,9 +34,9 @@ def conn_req (server_obj, mqtt, args):
     nick = args[1]
     client = args[0]
     if server_obj.new_client(client, nick):
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, SELF, client)), YEA)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, SELF, client)), " ".join((CONN_REQ, YEA)))
     else:
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, SELF, client)), NAY)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, SELF, client)), " ".join((CONN_REQ, NAY)))
 
 def game_list_req(server_obj, mqtt, args):
     client = args[0]

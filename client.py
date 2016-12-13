@@ -9,7 +9,7 @@ import protocol.client.client_protocol as cp
 import client_data.states as states
 
 from protocol.common import *
-from time import sleep
+from time import sleep, time
 
 
 SELF += 'C'
@@ -25,7 +25,9 @@ class Client():
         self.client.on_message = lambda client, userdata, msg: cp.message_in(self, client, userdata, msg)
 
         self.client.connect(DEFAULT_SERVER_URL, DEFAULT_SERVER_PORT)
-
+        self.waiting = False
+        self.wait_time = 0
+        self.waiting_since = 0
 
     def start_blocking(self):
         self.client.loop_forever()
@@ -39,6 +41,14 @@ class Client():
         while True:
             self.run_state()
             sleep(3)
+
+    def add_topic(self, topic):
+        self.topics.append(topic)
+        self.client.subscribe(topic)
+
+    def remove_topic(self, topic):
+        self.topics.remove(topic)
+        self.client.unsubscribe(topic)
 
     def sub_to_topics(self):
         for topic in self.topics:
@@ -54,16 +64,27 @@ class Client():
         self.sub_to_topics()
 
     def run_state(self):
-        if self.state == states.FIND_SERVERS:
-            ret = self.find_servers()
-        elif self.state == states.CONNECT_SERVER:
-            ret = self.connect_to_server()
+        if self.waiting:
+            if int(time()) - self.waiting_since >= self.wait_time:
+                self.waiting = False
+                ret = states.RET_TIMEOUT
+            else:
+                return
         else:
-            ret = states.RET_NOK
+            if self.state == states.FIND_SERVERS:
+                ret = self.find_servers()
+            elif self.state == states.CONNECT_SERVER:
+                ret = self.connect_to_server()
+            else:
+                ret = states.RET_NOK
+
+            if ret == states.RET_WAIT:
+                self.wait_time = 3
+                self.waiting_since = int(time())
+                self.waiting = True
 
         LOG.debug('Retcode from state %s: %s' % (states.states[self.state], states.state_ret[ret]))
         self.state = states.state_transitions[(ret, self.state)]
-
 
     def find_servers(self):
         LOG.debug("Finding online servers")
@@ -84,11 +105,23 @@ class Client():
 
     def connect_to_server(self):
         server = ''
+        nickname = ''
         while not server in self.servers:
             print("Server list: " + ', '.join(self.servers))
-            server = input('Select server to connect to. ')
-        
-        return states.RET_OK
+            server, nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
+        self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, server, SELF)))
+        mqtt_publish(self.client, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, server)), ' '.join((CONN_REQ, SELF, nickname)))
+        return states.RET_WAIT
+
+    def conn_req(self, response):
+        if (not self.waiting) or (self.state != states.CONNECT_SERVER):
+            return
+        if response[0] == YEA:
+            self.state = states.SERVER_CONNECTED
+        else:
+            self.state = states.FIND_SERVERS
+        self.waiting == False
+
 
 client = Client()
 client.run()
