@@ -10,9 +10,9 @@ def message_in(client_obj, client, topic_list, payload_list):
     LOG.info("Received message of type %s"% payload_list[0])
     LOG.debug ("Message: %s - %s"%("/".join(topic_list), " ".join(payload_list)))
     if payload_list[0] == SOUND_OFF:
-        sound_off(client, payload_list[1])
+        sound_off(client, client_obj, payload_list[1])
 
-def sound_off(mqtt, client):
-    print("Clients connected %s" %client)
+def sound_off(mqtt, client_obj, server_name):
+    client_obj.found_server(server_name)
     #mqtt.publish("/".join((DEFAULT_ROOT_TOPIC, GLOBAL, client)),\
     #" ".join((SOUND_OFF,SELF)))

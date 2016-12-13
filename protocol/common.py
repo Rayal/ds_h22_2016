@@ -14,7 +14,12 @@ DEFAULT_SERVER_URL = "iot.eclipse.org"
 DEFAULT_ROOT_TOPIC = "DS2016_BATTLESHIP"
 DEFAULT_ROOT_LEN = len(DEFAULT_ROOT_TOPIC) + 1
 
-SELF = name + str(getpid())
+DEBUG = True
+
+if DEBUG:
+    SELF = 'DEBUG_'
+else:
+    SELF = name + str(getpid())
 
 # GLOBAL MESSAGE TYPES
 SOUND_OFF =       '00'
