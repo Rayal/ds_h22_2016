@@ -79,9 +79,10 @@ GAME_TYPES = {
     NEW_HOST:        "NEW_HOST"
 }
 
-#YEA AND NAY
+#YEA, NAY and ACK
 YEA = "YEA"
 NAY = "NAY"
+ACK = "ACK"
 
 #TOPICS
 GLOBAL =  "G"
