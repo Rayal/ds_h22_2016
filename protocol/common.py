@@ -15,8 +15,9 @@ DEFAULT_ROOT_TOPIC = "DS2016_BATTLESHIP"
 DEFAULT_ROOT_LEN = len(DEFAULT_ROOT_TOPIC) + 1
 
 DEBUG = True
+
 if DEBUG:
-    SELF = "DEBUG_SERVER"
+    SELF = 'DEBUG_'
 else:
     SELF = name + str(getpid())
 
@@ -103,6 +104,7 @@ SHIP_POSITIONS = {
     VERTICAL:   "VERTICAL"
 }
 
+DEFAULT_WAIT_TIME = 5
 
 def mqtt_publish(mqtt_client, topic, payload = None, retain = False):
     LOG.debug("Sending: %s - %s" % (topic, payload))

@@ -55,7 +55,7 @@ class Server():
         return n_nick in self.nicknames
 
     def new_client(self, n_client, n_nick):
-        if not (self.client_exists(n_client) or self.nickname_exists(n_nick)):
+        if not (self.client_exists(n_client) != self.nickname_exists(n_nick)):
             self.clients.append(n_client)
             self.nicknames.append(n_nick)
             return True
