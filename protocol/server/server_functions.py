@@ -31,7 +31,6 @@ def message_in(server_obj, client, payload_list):
 
 
 def conn_req (server_obj, mqtt, args):
-    print 'Here'
     nick = args[1]
     client = args[0]
     if server_obj.new_client(client, nick):
@@ -79,4 +78,4 @@ def create_game(server_obj, mqtt, args):
     else:
         # The response is the game id, in int
         mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), str(response))
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GAME, server_obj.self, str(response))), YEA, True)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GAME, server_obj.self, str(response)), ACK), YEA, True)
