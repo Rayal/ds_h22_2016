@@ -12,9 +12,10 @@ import random as rnd
 
 class Server():
     def __init__(self):
+        self.self = SELF + 'S'
         self.topics = []
         self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GLOBAL)))
-        self.topics.append("/".join((DEFAULT_ROOT_TOPIC, SERVER, SELF)))
+        self.topics.append("/".join((DEFAULT_ROOT_TOPIC, SERVER, self.self)))
 
         self.clients = []
         self.nicknames = []
@@ -49,10 +50,14 @@ class Server():
         self.sub_to_topics()
 
     def client_exists(self, n_client):
-        return n_client in self.clients
+        if n_client in self.clients:
+            return self.clients.index(n_client)
+        return -1
 
     def nickname_exists(self, n_nick):
-        return n_nick in self.nicknames
+        if n_nick in self.nicknames:
+            return self.nicknames.index(n_nick)
+        return -1
 
     def new_client(self, n_client, n_nick):
         if not (self.client_exists(n_client) != self.nickname_exists(n_nick)):
@@ -78,7 +83,7 @@ class Server():
         self.games.append(new_game)
         self.open_games.append(new_game)
 
-        self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GAME, SELF, str(new_game.id))))
+        self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GAME, self.self, str(new_game.id))))
         self.sub_to_topics()
 
         return new_game.id

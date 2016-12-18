@@ -105,7 +105,11 @@ class Client():
 
     def connect_to_server(self):
         print("Server list: " + ', '.join(self.servers))
-        self.server, nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
+        if DEBUG:
+            self.server = 'DEBUG_S'
+            nickname = 'DEBUG_NAME'
+        else:
+            self.server, nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
         if not self.server in self.servers:
             return states.RET_NOK
         self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server, SELF)))
