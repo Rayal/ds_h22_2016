@@ -144,6 +144,7 @@ class Client():
         command = '_'.join(raw_input('Select a game to join or create a new one by writing a new name. ').split(' '))
         if command == '':
             return states.RET_RETRY
+        # TODO: Implement game creation or game connection request.
         return states.RET_OK
 
     def game_list(self, response):
