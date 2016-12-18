@@ -18,70 +18,69 @@ class Client():
     def __init__(self):
         self.topics = []
         self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GLOBAL, SELF)))
-        self.nickname = SELF + 'Cn'
 
-        self.client = mqtt.Client()
-        self.client.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
-        self.client.on_message = lambda client, userdata, msg: cp.message_in(self, client, userdata, msg)
+        self.mqtt = mqtt.Client()
+        self.mqtt.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
+        self.mqtt.on_message = lambda client, userdata, msg: cp.message_in(self, client, userdata, msg)
 
-        self.client.connect(DEFAULT_SERVER_URL, DEFAULT_SERVER_PORT)
+        self.mqtt.connect(DEFAULT_SERVER_URL, DEFAULT_SERVER_PORT)
+
         self.waiting = False
         self.wait_time = 0
         self.waiting_since = 0
+        self.server_response = {}
 
     def start_blocking(self):
-        self.client.loop_forever()
+        self.mqtt.loop_forever()
 
     def start_nonblocking(self):
-        self.client.loop_start()
+        self.mqtt.loop_start()
 
     def run(self):
         self.start_nonblocking()
         self.state = states.FIND_SERVERS
         while True:
             self.run_state()
-            sleep(3)
+            sleep(DEFAULT_WAIT_TIME)
 
     def add_topic(self, topic):
         self.topics.append(topic)
-        self.client.subscribe(topic)
+        self.mqtt.subscribe(topic)
 
     def remove_topic(self, topic):
         self.topics.remove(topic)
-        self.client.unsubscribe(topic)
+        self.mqtt.unsubscribe(topic)
 
     def sub_to_topics(self):
         for topic in self.topics:
             LOG.info("Subscribing to: %s" % topic)
-            self.client.subscribe(topic)
+            self.mqtt.subscribe(topic)
 
-    # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self, client, userdata, flags, rc):
         LOG.info("Connected with result code "+str(rc))
-
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
         self.sub_to_topics()
 
     def run_state(self):
-        if self.waiting:
-            if int(time()) - self.waiting_since >= self.wait_time:
-                self.waiting = False
-                ret = states.RET_TIMEOUT
-            else:
-                return
+        #if self.waiting:
+        #    if int(time()) - self.waiting_since >= self.wait_time:
+        #        self.waiting = False
+        #        ret = states.RET_TIMEOUT
+        #    else:
+        #        return
+        #else:
+        if self.state == states.FIND_SERVERS:
+            ret = self.find_servers()
+        elif self.state == states.CONNECT_SERVER:
+            ret = self.connect_to_server()
+        elif self.state == states.SERVER_CONNECTED:
+            ret = self.get_game_list()
         else:
-            if self.state == states.FIND_SERVERS:
-                ret = self.find_servers()
-            elif self.state == states.CONNECT_SERVER:
-                ret = self.connect_to_server()
-            else:
-                ret = states.RET_NOK
+            ret = states.RET_NOK
 
-            if ret == states.RET_WAIT:
-                self.wait_time = 3
-                self.waiting_since = int(time())
-                self.waiting = True
+            #if ret == states.RET_WAIT:
+            #    self.wait_time = 3
+            #    self.waiting_since = int(time())
+            #    self.waiting = True
 
         LOG.debug('Retcode from state %s: %s' % (states.states[self.state], states.state_ret[ret]))
         self.state = states.state_transitions[(ret, self.state)]
@@ -89,11 +88,12 @@ class Client():
     def find_servers(self):
         LOG.debug("Finding online servers")
         self.servers = []
-        mqtt_publish(self.client, '/'.join((DEFAULT_ROOT_TOPIC, GLOBAL)), ' '.join((SOUND_OFF, SELF)))
-        sleep(3)
+        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GLOBAL)), ' '.join((SOUND_OFF, SELF)))
+        sleep(DEFAULT_WAIT_TIME)
         if len(self.servers):
             return states.RET_OK
         else:
+            # TODO: Timeout, to give up
             return states.RET_RETRY
 
     def found_server(self, server_name):
@@ -104,24 +104,50 @@ class Client():
             LOG.error("Tried to append a servername to a non-existent list.")
 
     def connect_to_server(self):
-        server = ''
-        nickname = ''
-        while not server in self.servers:
-            print("Server list: " + ', '.join(self.servers))
-            server, nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
-        self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, server, SELF)))
-        mqtt_publish(self.client, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, server)), ' '.join((CONN_REQ, SELF, nickname)))
-        return states.RET_WAIT
+        print("Server list: " + ', '.join(self.servers))
+        self.server, nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
+        if not self.server in self.servers:
+            return states.RET_NOK
+        self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server, SELF)))
+        self.server_response[self.state] = NAY
+        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CONN_REQ, SELF, nickname)))
+        sleep(DEFAULT_WAIT_TIME)
+        if self.server_response[self.state] == YEA:
+            return states.RET_OK
+        return states.RET_NOK
+        #self.server = ''
+        #nickname = ''
+        #while not self.server in self.servers:
+        #    print("Server list: " + ', '.join(self.servers))
+        #    self.server, nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
+        #self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server, SELF)))
+        #mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, server)), ' '.join((CONN_REQ, SELF, nickname)))
+        #return states.RET_WAIT
 
     def conn_req(self, response):
-        if (not self.waiting) or (self.state != states.CONNECT_SERVER):
+        if self.state != states.CONNECT_SERVER:
             return
         if response[0] == YEA:
-            self.state = states.SERVER_CONNECTED
+            self.server_response[self.state] = YEA
         else:
-            self.state = states.FIND_SERVERS
-        self.waiting == False
+            self.server_response[self.state] = NAY
 
+    def get_game_list(self):
+        self.games_list = []
+        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((GAME_LIST_REQ, SELF)))
+        sleep(DEFAULT_WAIT_TIME)
+        if self.server_response[self.state] != '':
+            print('Currently open games:' + self.server_response[self.state])
+        else:
+            print('No games found open on the server.')
+
+        command = '_'.join(raw_input('Select a game to join or create a new one by writing a new name. ').split(' '))
+        if command == '':
+            return states.RET_RETRY
+        return states.RET_OK
+
+    def game_list(self, response):
+        self.server_response[self.state] = response[0]
 
 client = Client()
 client.run()

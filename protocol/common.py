@@ -96,6 +96,7 @@ CATEGORIES = {  GLOBAL:   "GLOBAL",
 OBJ_SEP =       chr(30)
 SUB_OBJ_SEP =   chr(31)
 
+DEFAULT_WAIT_TIME = 5
 
 def mqtt_publish(mqtt_client, topic, payload = None, retain = False):
     LOG.debug("Sending: %s - %s" % (topic, payload))

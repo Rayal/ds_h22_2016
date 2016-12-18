@@ -12,7 +12,7 @@ def message_in(client_obj, client, topic_list, payload_list):
     if payload_list[0] == CONN_REQ:
         conn_req(client_obj, client, payload_list[1:])
 
-    elif payload_list[0] == GAME_LIST_REQ:
+    elif payload_list[0] == GAME_LIST:
         game_list_req(client_obj, client, payload_list[1:])
 
     elif payload_list[0] == JOIN_GAME:
@@ -28,9 +28,8 @@ def conn_req (client_obj, mqtt, args):
     client_obj.conn_req(args)
 
 def game_list_req(client_obj, mqtt, args):
-    client = args[0]
-    game_list = client_obj.get_game_list()
-    mqtt.publish("/".join((DEFAULT_ROOT_TOPIC, SERVER, client)), " ".join((GAME_LIST, game_list)))
+    LOG.debug("Received message: %s"%args[0])
+    client_obj.game_list(args)
 
 def join_game(client_obj, mqtt, args):
     client = args[0]
