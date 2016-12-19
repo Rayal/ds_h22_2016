@@ -150,17 +150,18 @@ class Client():
 
         #BUI.screen_function(self.server_response[self.state], compile_servername)
 
-        id = '_'.join(raw_input('Select a gameID to join. Leave this space blank if you want to creat your own. ').split(' '))
-        print id
+        id = '_'.join(raw_input('Select a gameID to join. Leave this space blank if you want to create your own. ').split(' '))
+        #print id
+        #print self.server_response[self.state]
         if id == '':
             return states.RET_RETRY
 
         # TODO: Implement game creation or game connection request.
-        if id in self.games_list:
+        if id in self.server_response[self.state]:
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((JOIN_GAME, SELF, id)))
             sleep(DEFAULT_WAIT_TIME)
             if self.server_response[self.state] == id:
-                print("Connected to Game %s", id)
+                print("Connected to Game", id)
             else:
                 print("Can not connect to given gameid")
 
@@ -184,6 +185,9 @@ class Client():
         self.server_response[self.state] = response[0]
 
     def created_game(self, response):
+        self.server_response[self.state] = response[0]
+
+    def joined_game(self, response):
         self.server_response[self.state] = response[0]
 
 client = Client()
