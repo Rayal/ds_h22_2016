@@ -66,30 +66,6 @@ def user_place_ships(board, ships, nick, playerID):
     raw_input("Done placing user ships. Hit ENTER to continue")
     return board
 
-
-def computer_place_ships(board, ships):
-    for ship in ships.keys():
-
-        # genreate random coordinates and vlidate the postion
-        valid = False
-        while (not valid):
-
-            x = random.randint(1, 10) - 1
-            y = random.randint(1, 10) - 1
-            o = random.randint(0, 1)
-            if o == 0:
-                ori = "v"
-            else:
-                ori = "h"
-            valid = validate(board, ships[ship], x, y, ori)
-
-        # place the ship
-        print "Computer placing a/an " + ship
-        board = place_ship(board, ships[ship], ship[0], ori, x, y)
-
-    return board
-
-
 def place_ship(board, ship, s, ori, x, y):
     # place ship based on orientation
     if ori == "v":
@@ -190,22 +166,18 @@ def main(clientObj):
 
     # setup user and computer boards
     user_board = copy.deepcopy(board)
-    #comp_board = copy.deepcopy(board)
 
     # add ships as last element in the array
     user_board.append(copy.deepcopy(ships))
-    #comp_board.append(copy.deepcopy(ships))
 
     # ship placement
-    user_board = user_place_ships(user_board, ships)
-    #comp_board = computer_place_ships(comp_board, ships)
+    user_board = user_place_ships(user_board, ships, clientObj.nickname, 1)
 
     # game main loop
     while (1):
 
-        # player 1 move
+        # player move
         print_board('player_board', nickname)
-        comp_board = user_move(comp_board)
 
         # display user board
         print_board("u", user_board)
