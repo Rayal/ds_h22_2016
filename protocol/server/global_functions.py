@@ -14,10 +14,10 @@ def message_in(server_obj, client, payload_list):
         return
 
     if payload_list[0] == SOUND_OFF and len(payload_list) >= 2:
-        sound_off(client, payload_list[1])
+        sound_off(server_obj, client, payload_list[1])
     else:
         LOG.debug("Received message was too short.")
 
 
-def sound_off(mqtt, client):
-    mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GLOBAL, client)), " ".join((SOUND_OFF,SELF)))
+def sound_off(server_obj, mqtt, client):
+    mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GLOBAL, client)), " ".join((SOUND_OFF,server_obj.self)))

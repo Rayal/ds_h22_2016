@@ -14,7 +14,12 @@ DEFAULT_SERVER_URL = "iot.eclipse.org"
 DEFAULT_ROOT_TOPIC = "DS2016_BATTLESHIP"
 DEFAULT_ROOT_LEN = len(DEFAULT_ROOT_TOPIC) + 1
 
-SELF = name + str(getpid())
+DEBUG = True
+
+if DEBUG:
+    SELF = 'DEBUG_'
+else:
+    SELF = name + str(getpid())
 
 # GLOBAL MESSAGE TYPES
 SOUND_OFF =       '00'
@@ -74,9 +79,10 @@ GAME_TYPES = {
     NEW_HOST:        "NEW_HOST"
 }
 
-#YEA AND NAY
+#YEA, NAY and ACK
 YEA = "YEA"
 NAY = "NAY"
+ACK = "ACK"
 
 #TOPICS
 GLOBAL =  "G"
@@ -91,6 +97,15 @@ CATEGORIES = {  GLOBAL:   "GLOBAL",
 OBJ_SEP =       chr(30)
 SUB_OBJ_SEP =   chr(31)
 
+#SHIP POSITIONS:
+HORIZONTAL =    "0"
+VERTICAL =      "1"
+SHIP_POSITIONS = {
+    HORIZONTAL: "HORIZONTAL",
+    VERTICAL:   "VERTICAL"
+}
+
+DEFAULT_WAIT_TIME = 5
 
 def mqtt_publish(mqtt_client, topic, payload = None, retain = False):
     LOG.debug("Sending: %s - %s" % (topic, payload))

@@ -17,7 +17,7 @@ def message_in(server_obj, client, userdata, msg):
         LOG.info("Received message from %s topic"%CATEGORIES[topic[0]])
         if topic[0] == GLOBAL:
             wf.message_in(server_obj, client, msg.payload.split(" "))
-        elif topic[0] == SERVER and topic[1] == SELF:
+        elif topic[0] == SERVER and topic[1] == server_obj.self:
             sf.message_in(server_obj, client, msg.payload.split(" "))
-        elif topic[0] == GAME and topic[1] == SELF and len(topic) > 2:
+        elif topic[0] == GAME and topic[1] == server_obj.self and len(topic) > 2:
             gf.message_in(server_obj, client, topic[2:], msg.payload.split(" "))
