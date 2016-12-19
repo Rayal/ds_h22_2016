@@ -1,8 +1,8 @@
 import copy, random
 
-def print_board(board, nick, playerID):
+def print_board(board, nick):
 
-    print "The " + nick + "'s (Player "+ playerID +") board look like this: \n"
+    print "The " + nick + "'s board look like this: \n"
 
     # print the horizontal numbers
     print " ",
@@ -19,6 +19,8 @@ def print_board(board, nick, playerID):
             print str(i + 1) + " ",
 
         # print the board values, and cell dividers
+        playerID=1
+
         for j in range(10):
             if board[i][j] == -1:
                 print ' ',
@@ -48,7 +50,7 @@ def user_place_ships(board, ships, nick, playerID):
         valid = False
         while (not valid):
 
-            print_board(board, nick, playerID)
+            print_board(board, nick)
             print "Placing a " + ship
             x, y = get_coor()
             ori = v_or_h()
@@ -59,7 +61,7 @@ def user_place_ships(board, ships, nick, playerID):
 
         # place the ship
         board = place_ship(board, ships[ship], ship[0], ori, x, y)
-        print_board(board, nick, playerID)
+        print_board(board, nick)
 
     raw_input("Done placing user ships. Hit ENTER to continue")
     return board
@@ -165,79 +167,12 @@ def make_move(board, x, y):
         return "hit"
 
 
-def user_move(board):
-    # get coordinates from the user and try to make move
-    # if move is a hit, check ship sunk and win condition
-    while (True):
-        x, y = get_coor()
-        res = make_move(board, x, y)
-        if res == "hit":
-            print "Hit at " + str(x + 1) + "," + str(y + 1)
-            check_sink(board, x, y)
-            board[x][y] = '$'
-            if check_win(board):
-                return "WIN"
-        elif res == "miss":
-            print "Sorry, " + str(x + 1) + "," + str(y + 1) + " is a miss."
-            board[x][y] = "*"
-        elif res == "try again":
-            print "Sorry, that coordinate was already hit. Please try again"
-
-        if res != "try again":
-            return board
 
 
-def computer_move(board):
-    # generate user coordinates from the user and try to make move
-    # if move is a hit, check ship sunk and win condition
-    while (True):
-        x = random.randint(1, 10) - 1
-        y = random.randint(1, 10) - 1
-        res = make_move(board, x, y)
-        if res == "hit":
-            print "Hit at " + str(x + 1) + "," + str(y + 1)
-            check_sink(board, x, y)
-            board[x][y] = '$'
-            if check_win(board):
-                return "WIN"
-        elif res == "miss":
-            print "Sorry, " + str(x + 1) + "," + str(y + 1) + " is a miss."
-            board[x][y] = "*"
 
-        if res != "try again":
-            return board
+def main(clientObj):
+    nickname = clientObj.nickname
 
-
-def check_sink(board, x, y):
-    # figure out what ship was hit
-    if board[x][y] == "A":
-        ship = "Aircraft Carrier"
-    elif board[x][y] == "B":
-        ship = "Battleship"
-    elif board[x][y] == "S":
-        ship = "Submarine"
-    elif board[x][y] == "D":
-        ship = "Destroyer"
-    elif board[x][y] == "P":
-        ship = "Patrol Boat"
-
-    # mark cell as hit and check if sunk
-    board[-1][ship] -= 1
-    if board[-1][ship] == 0:
-        print ship + " Sunk"
-
-
-def check_win(board):
-    # simple for loop to check all cells in 2d board
-    # if any cell contains a char that is not a hit or a miss return false
-    for i in range(10):
-        for j in range(10):
-            if board[i][j] != -1 and board[i][j] != '*' and board[i][j] != '$':
-                return False
-    return True
-
-
-def main(server, playerID, nick):
     # types of ships
     ships = {"Aircraft Carrier": 5,
              "Battleship": 4,
@@ -262,32 +197,15 @@ def main(server, playerID, nick):
     #comp_board.append(copy.deepcopy(ships))
 
     # ship placement
-    user_board = user_place_ships(user_board, ships,nick,playerID)
+    user_board = user_place_ships(user_board, ships)
     #comp_board = computer_place_ships(comp_board, ships)
 
     # game main loop
     while (1):
 
         # player 1 move
-        print_board('player_1_board', nick, 1)
+        print_board('player_board', nickname)
         comp_board = user_move(comp_board)
-
-        # check if user won
-        if comp_board == "WIN":
-            print "User WON! :)"
-            quit()
-
-        # display current computer board
-        print_board("c", comp_board)
-        raw_input("To end user turn hit ENTER")
-
-        # computer move
-        user_board = computer_move(user_board)
-
-        # check if computer move
-        if user_board == "WIN":
-            print "Computer WON! :("
-            quit()
 
         # display user board
         print_board("u", user_board)
