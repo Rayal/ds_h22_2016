@@ -50,6 +50,7 @@ class Game():
     def game_thread(self):
         LOG.debug('Game %d thread started.' % self.id)
         while self.game_running:
+            sleep(1)
             if self.state == states.INIT:
                 if self.config_done and self.check_ready():
                     self.state = states.WAITING_TO_START
@@ -62,24 +63,30 @@ class Game():
             elif self.state == states.PLAY:
                 if self.waiting:
                     if int(time.time()) - self.waiting_since >= wait_time:
-                        self.timeout()
+                        self.turn_timeout()
+                    else:
+                        continue
                 for player in self.activeplayers:
                     self.send_turn(player)
+                self.waiting = True
+                self.wait_time = states.DEFAULT_TURN_SPEED
+                self.waiting_since = int(time.time())
                 pass
             elif self.state == states.POST_PLAY:
                 pass
             else:
                 pass
-            sleep(1)
         LOG.debug('Game %d thread ended.' % self.id)
         return
 
-    def timeout(self):
+    def turn_timeout(self):
+        self.waiting = False
+        self.wait_time = states.DEFAULT_WAIT_TIME
         for player in self.activeplayers:
             if self.player_moves[player] == (None, None, None):
                 self.activeplayers.remove(player)
             else:
-
+                self.play_move(player, self.player_moves[player])
 
     def send_turn(self, player):
         mqtt_publish(self.parent.client,

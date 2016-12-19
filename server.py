@@ -24,7 +24,6 @@ class Server():
         self.games = []
         self.open_games = []
         self.closed_games = []
-        self.clients_in_game = {}
         self.free_IDs = range(1, 1000)
         if not DEBUG:
             rnd.shuffle(self.free_IDs)
@@ -39,23 +38,7 @@ class Server():
     def start(self):
         self.client.loop_forever()
 
-<<<<<<< HEAD
-    def stop(self):
-        for game in self.games:
-            game.game_running = False
-        self.client.disconnect()
-
-    def add_topic(self, topic):
-        self.topics.append(topic)
-        self.client.subscribe(topic)
-
-    def remove_topic(self, topic):
-        self.topics.remove(topic)
-        self.client.unsubscribe(topic)
-
-=======
     # Subscribes to all the necessary MQTT topics
->>>>>>> master
     def sub_to_topics(self):
         for topic in self.topics:
             LOG.info("Subscribing to: %s" % topic)
@@ -65,24 +48,25 @@ class Server():
     def on_connect(self, client, userdata, flags, rc):
         LOG.info("Connected with result code "+str(rc))
 
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
         self.sub_to_topics()
 
-        # Returns the index the given client, if they are connected to the server.
-        # If the client is not connected, this method returns -1
+    # Returns the index the given client, if they are connected to the server.
+    # If the client is not connected, this method returns -1
     def client_exists(self, n_client):
         if n_client in self.clients:
             return self.clients.index(n_client)
         return -1
 
-        # Returns the index the given nickname, if they are connected to the server.
-        # If the nickname is not connected, this method returns -1
+    # Returns the index the given nickname, if they are connected to the server.
+    # If the nickname is not connected, this method returns -1
     def nickname_exists(self, n_nick):
         if n_nick in self.nicknames:
             return self.nicknames.index(n_nick)
         return -1
 
+    # Return
     def new_client(self, n_client, n_nick):
         if not (self.client_exists(n_client) != self.nickname_exists(n_nick)):
             self.clients.append(n_client)
@@ -106,9 +90,9 @@ class Server():
         new_game = Game(self, name, player, self.free_IDs.pop(0), client)
         self.games.append(new_game)
         self.open_games.append(new_game)
-        self.clients_in_game[new_game] = [client]
 
-        self.add_topic("/".join((DEFAULT_ROOT_TOPIC, GAME, ACK, self.self, str(new_game.id))))
+        self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GAME, self.self, str(new_game.id))))
+        self.sub_to_topics()
 
         return new_game.id
 
@@ -128,7 +112,6 @@ class Server():
 
         if res >= 0:
             LOG.debug("Player %s joined game %s:%d"%(player, game.name, game.id))
-            self.clients_in_game[game].append(client)
             return game.id
 
         return 0
@@ -161,18 +144,6 @@ class Server():
             return 0
         return -5
 
-    def nickname_from_client(self, client):
-        if not client in self.clients:
-            return ''
-
-        return self.nicknames[self.clients.index(client)]
-
-    def client_from_nickname(self, nickname):
-        if not nickname in self.nicknames:
-            return ''
-
-        return self.clients[self.nicknames.index(nickname)]
-
     def ship_pos(self, game_id, args_list):
         if len(args_list) < 2:
             return -1
@@ -181,10 +152,11 @@ class Server():
         if not game:
             return -2
 
-        client = args_list[0]
-        player = self.nickname_from_client(client)
-        if player == '':
+        client_name = args_list[0]
+        if not client_name in self.clients:
             return -3
+
+        player = self.nicknames[self.clients.index(client)]
 
         res = game.set_ships(player, args_list[1])
 
@@ -192,10 +164,8 @@ class Server():
             res -= 3
         return res
 
-    def ready_to_start(self, game, setup):
-        mqtt_publish(self.client,
-        '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.self, str(game.id), ACK)),
-        ' '.join((GAME_SETUP, setup, READY_TO_START)), True)
+    def ready_to_start(self, game_id, args_list):
+        pass
 
     def start_game(self, game_id, args_list):
         pass
@@ -238,8 +208,4 @@ class Server():
 
 
 server = Server()
-try:
-    server.start()
-except KeyboardInterrupt:
-    LOG.info('Received Keyboard Interrupt. Stopping server.')
-    server.stop()
+server.start()

@@ -77,5 +77,5 @@ def create_game(server_obj, mqtt, args):
         mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), NAY)
     else:
         # The response is the game id, in int
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), str(response))
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GAME, server_obj.self, str(response)), ACK), YEA, True)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), ' '.join((CREATE_GAME, str(response))))
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GAME, server_obj.self, str(response), ACK)), YEA, True)
