@@ -44,11 +44,27 @@ class Server():
             game.stop()
         self.client.disconnect()
 
+    def add_topic(self, topic):
+        self.topics.append(topic)
+        self.client.subscribe(topic)
+
+    def remove_topic(self, topic):
+        self.topics.remove(topic)
+        self.client.unsubscribe(topic)
+
     # Subscribes to all the necessary MQTT topics
     def sub_to_topics(self):
         for topic in self.topics:
             LOG.info("Subscribing to: %s" % topic)
             self.client.subscribe(topic)
+
+    def remove_game(self, game):
+        if game in self.games:
+            self.games.remove(game)
+        if game in self.open_games:
+            self.open_games.remove(game)
+        if game in self.closed_games:
+            self.closed_games.remove(game)
 
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self, client, userdata, flags, rc):
@@ -97,8 +113,7 @@ class Server():
         self.games.append(new_game)
         self.open_games.append(new_game)
 
-        self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GAME, self.self, str(new_game.id))))
-        self.sub_to_topics()
+        self.add_topic("/".join((DEFAULT_ROOT_TOPIC, GAME, self.self, str(new_game.id))))
 
         return new_game.id
 
