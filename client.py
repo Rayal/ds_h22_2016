@@ -110,14 +110,14 @@ class Client():
         print("Server list: " + ', '.join(self.servers))
         if DEBUG:
             self.server = 'DEBUG_S'
-            nickname = 'DEBUG_NAME'
+            self.nickname = 'DEBUG_NAME'
         else:
-            self.server, nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
+            self.server, self.nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
         if not self.server in self.servers:
             return states.RET_NOK
         self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server, SELF)))
         self.server_response[self.state] = NAY
-        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CONN_REQ, SELF, nickname)))
+        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CONN_REQ, SELF, self.nickname)))
         sleep(DEFAULT_WAIT_TIME)
         if self.server_response[self.state] == YEA:
             return states.RET_OK
