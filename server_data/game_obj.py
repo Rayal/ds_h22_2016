@@ -79,6 +79,9 @@ class Game():
         LOG.debug('Game %d thread ended.' % self.id)
         return
 
+    def stop(self):
+        self.game_running = False
+
     def turn_timeout(self):
         self.waiting = False
         self.wait_time = states.DEFAULT_WAIT_TIME

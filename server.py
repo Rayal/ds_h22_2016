@@ -38,6 +38,12 @@ class Server():
     def start(self):
         self.client.loop_forever()
 
+    def stop(self):
+        LOG.debug('Received Keyboard Interrupt. Closing server.')
+        for game in self.games:
+            game.stop()
+        self.client.disconnect()
+
     # Subscribes to all the necessary MQTT topics
     def sub_to_topics(self):
         for topic in self.topics:
@@ -208,4 +214,7 @@ class Server():
 
 
 server = Server()
-server.start()
+try:
+    server.start()
+except KeyboardInterrupt:
+    server.stop()

@@ -84,7 +84,7 @@ YEA = "YEA"
 NAY = "NAY"
 ACK = "ACK"
 
-#TOPICS
+#TOPIC CATEGORIES
 GLOBAL =  "G"
 SERVER =  "S"
 GAME =    "P"
