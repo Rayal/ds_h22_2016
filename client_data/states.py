@@ -1,11 +1,13 @@
 FIND_SERVERS =      1
 CONNECT_SERVER =    2
 SERVER_CONNECTED =  3
+GAME_STARTED =      4
 
 states = {
     FIND_SERVERS:       'Find Servers',
     CONNECT_SERVER:     'Connect to Server',
-    SERVER_CONNECTED:   'Connected to server'
+    SERVER_CONNECTED:   'Connected to server',
+    GAME_STARTED:       'Connected to a running game'
 }
 
 RET_OK =        100
@@ -31,37 +33,15 @@ state_transitions = {
     #(RET_RETRY,     CONNECT_SERVER):        CONNECT_SERVER,
     #(RET_WAIT,      CONNECT_SERVER):        CONNECT_SERVER,
     (RET_TIMEOUT,   CONNECT_SERVER):        FIND_SERVERS,
-    (RET_OK,        SERVER_CONNECTED):      SERVER_CONNECTED,
+    (RET_OK,        SERVER_CONNECTED):      GAME_STARTED,
     (RET_NOK,       SERVER_CONNECTED):      FIND_SERVERS,
     (RET_RETRY,     SERVER_CONNECTED):      SERVER_CONNECTED,
     (RET_WAIT,      SERVER_CONNECTED):      SERVER_CONNECTED,
-    (RET_TIMEOUT,   SERVER_CONNECTED):      SERVER_CONNECTED
+    (RET_TIMEOUT,   SERVER_CONNECTED):      SERVER_CONNECTED,
+    (RET_OK,        GAME_STARTED):          GAME_STARTED,
+    (RET_NOK,       GAME_STARTED):          FIND_SERVERS,
+    (RET_RETRY,     GAME_STARTED):          GAME_STARTED,
+    (RET_WAIT,      GAME_STARTED):          GAME_STARTED,
+    (RET_TIMEOUT,   GAME_STARTED):          GAME_STARTED
 }
-# class State():
-#     def __init__(self, function, next_state = None, prev_state = None):
-#         self.function = function
-#         if next_state:
-#             self.next_state = next_state
-#         if prev_state:
-#             self.prev_state = prev_state
-#
-#     def run(self):
-#         retval = function()
-#         if retval == RET_OK:
-#             try:
-#                 return self.next_state
-#             except NameError:
-#                 return (None, RET_OK)
-#         elif retval == RET_FAIL:
-#             try:
-#                 return self.prev_state
-#             except NameError:
-#                 return (None, RET_FAIL)
-#         else:
-#             return self
-#
-#     def set_prev(self, state):
-#         self.prev_state = state
-#
-#     def set_next(self, state):
-#         self.next_state = state
+

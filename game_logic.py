@@ -171,13 +171,16 @@ def main(clientObj):
     user_board.append(copy.deepcopy(ships))
 
     # ship placement
+
     user_board = user_place_ships(user_board, ships, clientObj.nickname, 1)
+
 
     # game main loop
     while (1):
 
         # player move
         print_board('player_board', nickname)
+
 
         # display user board
         print_board("u", user_board)

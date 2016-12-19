@@ -11,8 +11,11 @@ import client_data.states as states
 import BattleShip_UI as BUI
 from protocol.common import *
 from time import sleep, time
+from game_logic import main
+
 
 # Client extension ------------------------------------------------------------
+
 SELF += 'C'
 
 #def compile_servername(nickname, servername):
@@ -34,6 +37,9 @@ class Client():
         self.server_response = {}
 
 # Start Client loop -----------------------------------------------------------
+
+        self.nickname = ''
+
     def start_blocking(self):
         self.mqtt.loop_forever()
 
@@ -82,6 +88,8 @@ class Client():
             ret = self.connect_to_server()
         elif self.state == states.SERVER_CONNECTED:
             ret = self.get_game_list()
+        elif self.state == states.GAME_STARTED:
+            ret = self.main()
         else:
             ret = states.RET_NOK
 
@@ -205,5 +213,11 @@ class Client():
     def joined_game(self, response):
         self.server_response[self.state] = response[0]
 
+    def main(self):
+        main(self)
+        return states.RET_OK
+
 client = Client()
 client.run()
+
+
