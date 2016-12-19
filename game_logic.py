@@ -1,11 +1,7 @@
 import copy, random
 
-def print_board(board, nick):
+def print_board(s, board):
 
-    print "The " + nick + "'s board look like this: \n"
-
-    # print the horizontal numbers
-    print " ",
     for i in range(10):
         print "  " + str(i + 1) + "  ",
     print "\n"
@@ -19,14 +15,12 @@ def print_board(board, nick):
             print str(i + 1) + " ",
 
         # print the board values, and cell dividers
-        playerID=1
-
         for j in range(10):
             if board[i][j] == -1:
                 print ' ',
-            elif playerID == "1":
+            elif s == "u":
                 print board[i][j],
-            elif playerID == "2":
+            elif s == "c":
                 if board[i][j] == "*" or board[i][j] == "$":
                     print board[i][j],
                 else:
@@ -43,15 +37,15 @@ def print_board(board, nick):
             print
 
 
-def user_place_ships(board, ships, nick, playerID):
+def user_place_ships(board, ships):
     for ship in ships.keys():
 
         # get coordinates from user and vlidate the postion
         valid = False
         while (not valid):
 
-            print_board(board, nick)
-            print "Placing a " + ship
+            print_board("u", board)
+            print "Placing a/an " + ship
             x, y = get_coor()
             ori = v_or_h()
             valid = validate(board, ships[ship], x, y, ori)
@@ -61,10 +55,12 @@ def user_place_ships(board, ships, nick, playerID):
 
         # place the ship
         board = place_ship(board, ships[ship], ship[0], ori, x, y)
-        print_board(board, nick)
+        print_board("u", board)
 
     raw_input("Done placing user ships. Hit ENTER to continue")
     return board
+
+
 
 def place_ship(board, ship, s, ori, x, y):
     # place ship based on orientation
@@ -133,21 +129,8 @@ def get_coor():
             print e
 
 
-def make_move(board, x, y):
-    # make a move on the board and return the result, hit, miss or try again for repeat hit
-    if board[x][y] == -1:
-        return "miss"
-    elif board[x][y] == '*' or board[x][y] == '$':
-        return "try again"
-    else:
-        return "hit"
-
-
-
-
-
 def main(clientObj):
-    nickname = clientObj.nickname
+    #nickname = clientObj.nickname
 
     # types of ships
     ships = {"Aircraft Carrier": 5,
@@ -167,18 +150,17 @@ def main(clientObj):
     # setup user and computer boards
     user_board = copy.deepcopy(board)
 
+
     # add ships as last element in the array
-    user_board.append(copy.deepcopy(ships))
+    #user_board.append(copy.deepcopy(ships))
+
 
     # ship placement
-    user_board = user_place_ships(user_board, ships, clientObj.nickname, 1)
+    user_board = user_place_ships(user_board, ships)
+
 
     # game main loop
     while (1):
 
-        # player move
-        print_board('player_board', nickname)
-
         # display user board
         print_board("u", user_board)
-        raw_input("To end computer turn hit ENTER")
