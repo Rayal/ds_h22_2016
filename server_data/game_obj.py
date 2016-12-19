@@ -38,7 +38,7 @@ class Game():
         self.client = client
         self.config_done = False
         self.boards = {}
-        self.player_ships = defaultdict(lambda:{})
+        self.player_ships = {}
 
         self.state = states.INIT
         self.ready_to_start = False
@@ -175,10 +175,13 @@ class Game():
                 del board
                 return -4
 
-            if not set_ship(board, np.array(ship[:-1]).astype(int), ship[-1] == HORIZONTAL):
+            if not set_ship(board,
+                    np.array(ship[:-1]).astype(int),
+                    ship[-1] == HORIZONTAL):
                 del board
                 return -5
 
+        self.player_ships[player] = ship_list
         LOG.debug("Player %s board"%player)
 
         self.boards[player] = board
@@ -198,7 +201,22 @@ class Game():
         ' '.join((HIT, ) + coords[0] + (aggressor, )))
 
     def check_sunk(self, player, coords):
-        pass
+        n_x, n_y = coords
+        ship = None
+        for [size, x, y, d] in self.player_ships[player]:
+            if d == HORIZONTAL:
+                if n_x >= x and (n_x < x + size) and n_y == y:
+                    ship = [size, x, y, d]
+                    break
+            else:
+                if n_y >= y and (n_y < y + size) and n_x == x:
+                    ship = [size, x, y, d]
+                    break
+
+
+        ship = list(get_ship(self.boards[player], ship[0], ship[1:-1], ship[-1] == HORIZONTAL))
+
+        return ship.count(2) == len(ship)
 
     def play_move(self, player, move):
         if move[0] >= self.size[0] or move[1] >= self.size[1]:
@@ -208,8 +226,8 @@ class Game():
 
         victim = self.boards[self.players[move[2]]]
 
-        if victim [move[0]][move[1]] != 0:
-            victim [move[0]][move[1]] = 2
+        if victim [move[1]][move[0]] != 0:
+            victim [move[1]][move[0]] = 2
             self.shot_message(move[2], move[:2], player)
             self.check_sunk(move[2], move[:2])
             return True
