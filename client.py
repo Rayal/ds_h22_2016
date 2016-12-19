@@ -7,12 +7,15 @@ LOG = logging.getLogger()
 import paho.mqtt.client as mqtt
 import protocol.client.client_protocol as cp
 import client_data.states as states
+import BattleShip_UI as BUI
 
 from protocol.common import *
 from time import sleep, time
 
 
 SELF += 'C'
+
+#def compile_servername(nickname, servername):
 
 class Client():
     def __init__(self):
@@ -145,13 +148,46 @@ class Client():
         else:
             print('No games found open on the server.')
 
-        command = '_'.join(raw_input('Select a game to join or create a new one by writing a new name. ').split(' '))
-        if command == '':
+        #BUI.screen_function(self.server_response[self.state], compile_servername)
+
+        id = '_'.join(raw_input('Select a gameID to join. Leave this space blank if you want to create your own. ').split(' '))
+        #print id
+        #print self.server_response[self.state]
+        if id == '':
             return states.RET_RETRY
+
         # TODO: Implement game creation or game connection request.
+        if id in self.server_response[self.state]:
+            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((JOIN_GAME, SELF, id)))
+            sleep(DEFAULT_WAIT_TIME)
+            if self.server_response[self.state] == id:
+                print("Connected to Game", id)
+            else:
+                print("Can not connect to given gameid")
+
+        else:
+            newGameName = '_'.join(raw_input('Enter new gameName. ').split(' '))
+            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CREATE_GAME, SELF, newGameName)))
+            sleep(DEFAULT_WAIT_TIME)
+            if self.server_response[self.state] != '':
+                newgameIDcreated = self.server_response[self.state]
+                print('Created Game:' + self.server_response[self.state])
+            else:
+                print('No game created.')
+            newgameIDcreated = self.server_response[self.state]
+            #print newgameIDcreated
+            #newgame = [newgameIDcreated, newGameName]
+            self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, newgameIDcreated, ACK)))
+
         return states.RET_OK
 
     def game_list(self, response):
+        self.server_response[self.state] = response[0]
+
+    def created_game(self, response):
+        self.server_response[self.state] = response[0]
+
+    def joined_game(self, response):
         self.server_response[self.state] = response[0]
 
 client = Client()

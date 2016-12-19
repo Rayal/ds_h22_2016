@@ -11,6 +11,7 @@ from server_data.game_obj import Game
 import random as rnd
 
 class Server():
+    #Constructor. Creates Server object, initializes values.
     def __init__(self):
         self.self = SELF + 'S'
         self.topics = []
@@ -33,9 +34,17 @@ class Server():
 
         self.client.connect(DEFAULT_SERVER_URL, DEFAULT_SERVER_PORT)
 
+    # Starts server thread loop. This is necessary for the mqtt.
     def start(self):
         self.client.loop_forever()
 
+    def stop(self):
+        LOG.debug('Received Keyboard Interrupt. Closing server.')
+        for game in self.games:
+            game.stop()
+        self.client.disconnect()
+
+    # Subscribes to all the necessary MQTT topics
     def sub_to_topics(self):
         for topic in self.topics:
             LOG.info("Subscribing to: %s" % topic)
@@ -45,20 +54,25 @@ class Server():
     def on_connect(self, client, userdata, flags, rc):
         LOG.info("Connected with result code "+str(rc))
 
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
         self.sub_to_topics()
 
+    # Returns the index the given client, if they are connected to the server.
+    # If the client is not connected, this method returns -1
     def client_exists(self, n_client):
         if n_client in self.clients:
             return self.clients.index(n_client)
         return -1
 
+    # Returns the index the given nickname, if they are connected to the server.
+    # If the nickname is not connected, this method returns -1
     def nickname_exists(self, n_nick):
         if n_nick in self.nicknames:
             return self.nicknames.index(n_nick)
         return -1
 
+    # Return
     def new_client(self, n_client, n_nick):
         if not (self.client_exists(n_client) != self.nickname_exists(n_nick)):
             self.clients.append(n_client)
@@ -200,4 +214,7 @@ class Server():
 
 
 server = Server()
-server.start()
+try:
+    server.start()
+except KeyboardInterrupt:
+    server.stop()

@@ -31,7 +31,6 @@ def message_in(server_obj, client, payload_list):
 
 
 def conn_req (server_obj, mqtt, args):
-    print 'Here'
     nick = args[1]
     client = args[0]
     if server_obj.new_client(client, nick):
@@ -51,17 +50,17 @@ def join_game(server_obj, mqtt, args):
     if response == 0:
         # The player couldn't join the game
         LOG.debug("Game %s full or already started" % game_id)
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), NAY)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), ' '.join((JOIN_GAME, NAY)))
     elif response == -1:
         # Game not found
         LOG.debug("Game %s not found" % game_id)
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), NAY)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), ' '.join((JOIN_GAME, NAY)))
     elif response == -2:
         # Client not connected to server
         LOG.debug("Client %s not connected to server" % client)
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), NAY)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), ' '.join((JOIN_GAME, NAY)))
     else:
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), str(response))
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), ' '.join((JOIN_GAME, str(response))))
 
 def create_game(server_obj, mqtt, args):
     client = args[0]
@@ -69,14 +68,14 @@ def create_game(server_obj, mqtt, args):
     response = server_obj.create_game(game_name, client)
     if response == 0:
         # Game of that name already exists
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), NAY)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), ' '.join((CREATE_GAME, NAY)))
     elif response == -1:
         # Server is full of games
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), NAY)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), ' '.join((CREATE_GAME, NAY)))
     elif response == -2:
         # Client not connected to server
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), NAY)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), ' '.join((CREATE_GAME, NAY)))
     else:
         # The response is the game id, in int
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), str(response))
-        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GAME, server_obj.self, str(response))), YEA, True)
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), ' '.join((CREATE_GAME, str(response))))
+        mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GAME, server_obj.self, str(response), ACK)), YEA, True)
