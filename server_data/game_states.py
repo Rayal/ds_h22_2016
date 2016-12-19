@@ -14,4 +14,4 @@ state_transitions = {
     (INIT, RET_NOK):    POST_PLAY
 }
 
-DEFAULT_TURN_SPEED = 90
+DEFAULT_TURN_SPEED = 180

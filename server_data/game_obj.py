@@ -45,16 +45,19 @@ class Game():
         self.game_running = True
         self.thread = threading.Thread(target = lambda:self.game_thread())
 
-        self.waiting = False
-        self.wait_time = 0
-        self.waiting_since = 0
+        self.turn_waiting = False
+        self.turn_wait_time = 0
+        self.turn_waiting_since = 0
 
         self.thread.start()
         self.player_moves = defaultdict(lambda:(None, None))
 
     def game_thread(self):
         LOG.debug('Game %d thread started.' % self.id)
+        self.last_action_time = int(time())
         while self.game_running:
+            if int(time()) - self.last_action_time > states.DEFAULT_TURN_SPEED:
+                break
             sleep(1)
             if self.state == states.INIT:
                 if self.config_done and self.check_ready():
@@ -66,35 +69,48 @@ class Game():
                     continue
                 self.parent.ready_to_start(self, self.get_conf())
             elif self.state == states.PLAY:
-                if self.waiting:
-                    if int(time.time()) - self.waiting_since >= wait_time:
+                if self.turn_waiting:
+                    if int(time.time()) - self.turn_waiting_since >= wait_time:
                         self.turn_timeout()
                     else:
                         continue
                 for player in self.activeplayers:
                     self.send_turn(player)
-                self.waiting = True
-                self.wait_time = states.DEFAULT_TURN_SPEED
-                self.waiting_since = int(time.time())
+                self.turn_waiting = True
+                self.turn_wait_time = states.DEFAULT_TURN_SPEED
+                self.turn_waiting_since = int(time.time())
                 pass
             elif self.state == states.POST_PLAY:
                 pass
             else:
                 pass
+        # Cleanup before destroying.
+        mqtt_publish(self.parent.client,
+        '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), ACK)),
+        '', True)
+        self.parent.client.remove_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id))))
         LOG.debug('Game %d thread ended.' % self.id)
-        return
+        self.parent.remove_game(self)
+        del self
 
     def stop(self):
         self.game_running = False
 
     def turn_timeout(self):
-        self.waiting = False
-        self.wait_time = states.DEFAULT_WAIT_TIME
+        self.turn_waiting = False
+        self.turn_wait_time = states.DEFAULT_WAIT_TIME
         for player in self.activeplayers:
             if self.player_moves[player] == (None, None, None):
                 self.activeplayers.remove(player)
             else:
-                self.play_move(player, self.player_moves[player])
+                if self.play_move(player, self.player_moves[player]):
+                    mqtt_publish(self.parent.client,
+                    '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), player)),
+                    BOOM)
+                else:
+                    mqtt_publish(self.parent.client,
+                    '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), player)),
+                    SPLASH)
 
     def send_turn(self, player):
         mqtt_publish(self.parent.client,
@@ -114,6 +130,7 @@ class Game():
         return True
 
     def add_player(self, player):
+        self.last_action_time = int(time())
         if len(self.players) == 3:
             return -1
         self.players.append(player)
@@ -127,6 +144,7 @@ class Game():
         return name
 
     def configure(self, size, ship_list):
+        self.last_action_time = int(time())
         if self.config_done: # Conf can only be done once.
             return False
 
@@ -155,6 +173,7 @@ class Game():
         return ret
 
     def set_ships(self, player, ship_list):
+        self.last_action_time = int(time())
         if not self.config_done:
             return -6
 
@@ -188,17 +207,27 @@ class Game():
         return 0
 
     def start_game(self):
+        self.last_action_time = int(time())
         if self.state != states.WAITING_TO_START:
             return False
         self.state = states.PLAY
         self.activeplayers = [] + self.players
         return True
 
+    def shoot(self, player, coords, victim):
+        pass
+
     def shot_message(self, player, coords, aggressor):
         client = self.parent.client_from_nickname(player)
         mqtt_publish(self.parent.client,
-        '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), client)),
+        '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), player)),
         ' '.join((HIT, ) + coords[0] + (aggressor, )))
+
+    def sunk_message(self, ship, player):
+        for player in self.players:
+            mqtt_publish(self.parent.client,
+            '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), player)),
+            ' '.join((SUNK, str(ship), player)))
 
     def check_sunk(self, player, coords):
         n_x, n_y = coords
@@ -216,7 +245,8 @@ class Game():
 
         ship = list(get_ship(self.boards[player], ship[0], ship[1:-1], ship[-1] == HORIZONTAL))
 
-        return ship.count(2) == len(ship)
+        if ship.count(2) == len(ship):
+            self.sunk_message(len(ship), player)
 
     def play_move(self, player, move):
         if move[0] >= self.size[0] or move[1] >= self.size[1]:
