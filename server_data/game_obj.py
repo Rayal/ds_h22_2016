@@ -17,8 +17,12 @@ def set_ship(world, args, horizontal):
     size, x1, y1 = args
     try:
         if horizontal:
+            if list(world[y1][x1 + size]) != [0] * size:
+                return False
             world[y1][x1 + size] = 1
         else:
+            if list(world.T[x1][y1 + size]) != [0] * size:
+                return False
             world.T[x1][y1 + size] = 1
     except IndexError:
         return False
@@ -34,6 +38,7 @@ class Game():
         self.client = client
         self.config_done = False
         self.boards = {}
+        self.player_ships = defaultdict(lambda:{})
 
         self.state = states.INIT
         self.ready_to_start = False
@@ -186,6 +191,26 @@ class Game():
         self.activeplayers = [] + self.players
         return True
 
+    def shot_message(self, player, coords, aggressor):
+        client = self.parent.client_from_nickname(player)
+        mqtt_publish(self.parent.client,
+        '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), client)),
+        ' '.join((HIT, ) + coords[0] + (aggressor, )))
+
+    def check_sunk(self, player, coords):
+        pass
+
     def play_move(self, player, move):
         if move[0] >= self.size[0] or move[1] >= self.size[1]:
-            return
+            return False
+        if move[2] == player:
+            return False
+
+        victim = self.boards[self.players[move[2]]]
+
+        if victim [move[0]][move[1]] != 0:
+            victim [move[0]][move[1]] = 2
+            self.shot_message(move[2], move[:2], player)
+            self.check_sunk(move[2], move[:2])
+            return True
+        return False
