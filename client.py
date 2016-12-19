@@ -4,19 +4,19 @@ FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 LOG = logging.getLogger()
 
+# Imports ---------------------------------------------------------------------
 import paho.mqtt.client as mqtt
 import protocol.client.client_protocol as cp
 import client_data.states as states
 import BattleShip_UI as BUI
-
 from protocol.common import *
 from time import sleep, time
 
-
+# Client extension ------------------------------------------------------------
 SELF += 'C'
 
 #def compile_servername(nickname, servername):
-
+# Client class to initiate client object --------------------------------------
 class Client():
     def __init__(self):
         self.topics = []
@@ -33,12 +33,14 @@ class Client():
         self.waiting_since = 0
         self.server_response = {}
 
+# Start Client loop -----------------------------------------------------------
     def start_blocking(self):
         self.mqtt.loop_forever()
 
     def start_nonblocking(self):
         self.mqtt.loop_start()
 
+# Client run ------------------------------------------------------------------
     def run(self):
         self.start_nonblocking()
         self.state = states.FIND_SERVERS
@@ -46,6 +48,7 @@ class Client():
             self.run_state()
             sleep(DEFAULT_WAIT_TIME)
 
+# mqtt topics - add, remove, subscribe and unscribe ---------------------------
     def add_topic(self, topic):
         self.topics.append(topic)
         self.mqtt.subscribe(topic)
@@ -59,10 +62,12 @@ class Client():
             LOG.info("Subscribing to: %s" % topic)
             self.mqtt.subscribe(topic)
 
+# Connect the client to server ------------------------------------------------
     def on_connect(self, client, userdata, flags, rc):
         LOG.info("Connected with result code "+str(rc))
         self.sub_to_topics()
 
+# Client run method - find available servers, connect to server, get the game list in a server
     def run_state(self):
         #if self.waiting:
         #    if int(time()) - self.waiting_since >= self.wait_time:
@@ -88,6 +93,8 @@ class Client():
         LOG.debug('Retcode from state %s: %s' % (states.states[self.state], states.state_ret[ret]))
         self.state = states.state_transitions[(ret, self.state)]
 
+# Function find_servers to get a list of online servers -----------------------
+
     def find_servers(self):
         LOG.debug("Finding online servers")
         self.servers = []
@@ -99,6 +106,7 @@ class Client():
             # TODO: Timeout, to give up
             return states.RET_RETRY
 
+# Response with the available server list -------------------------------------
     def found_server(self, server_name):
         try:
             self.servers.append(server_name)
@@ -106,6 +114,7 @@ class Client():
         except NameError:
             LOG.error("Tried to append a servername to a non-existent list.")
 
+# Function connect_to_server with the server the client wants from the list of available servers
     def connect_to_server(self):
         print("Server list: " + ', '.join(self.servers))
         if DEBUG:
@@ -131,6 +140,7 @@ class Client():
         #mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, server)), ' '.join((CONN_REQ, SELF, nickname)))
         #return states.RET_WAIT
 
+# Function conn_req to get the response from the connect_to_server function ---
     def conn_req(self, response):
         if self.state != states.CONNECT_SERVER:
             return
@@ -139,6 +149,7 @@ class Client():
         else:
             self.server_response[self.state] = NAY
 
+# Function get_game_list to get the list from the connected server ---------------
     def get_game_list(self):
         self.games_list = []
         mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((GAME_LIST_REQ, SELF)))
@@ -156,7 +167,7 @@ class Client():
         if id == '':
             return states.RET_RETRY
 
-        # TODO: Implement game creation or game connection request.
+# join the existing game from the list of games available ---------------------
         if id in self.server_response[self.state]:
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((JOIN_GAME, SELF, id)))
             sleep(DEFAULT_WAIT_TIME)
@@ -165,6 +176,7 @@ class Client():
             else:
                 print("Can not connect to given gameid")
 
+# create a new game -----------------------------------------------------------
         else:
             newGameName = '_'.join(raw_input('Enter new gameName. ').split(' '))
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CREATE_GAME, SELF, newGameName)))
@@ -181,12 +193,15 @@ class Client():
 
         return states.RET_OK
 
+# Function game_list to get the response from the get_game_list function ------
     def game_list(self, response):
         self.server_response[self.state] = response[0]
 
+# Function created_game to get the response from the create_game (new) function
     def created_game(self, response):
         self.server_response[self.state] = response[0]
 
+# Function joined_game to get the response from the join_game (existing) function
     def joined_game(self, response):
         self.server_response[self.state] = response[0]
 
