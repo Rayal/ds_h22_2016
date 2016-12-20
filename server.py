@@ -184,8 +184,8 @@ class Server():
         if not game:
             return -2
 
-        client_name = args_list[0]
-        if not client_name in self.clients:
+        client = args_list[0]
+        if not client in self.clients:
             return -3
 
         player = self.nicknames[self.clients.index(client)]

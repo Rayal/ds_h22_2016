@@ -17,11 +17,13 @@ def set_ship(world, args, horizontal):
     size, x1, y1 = args
     try:
         if horizontal:
-            if list(world[y1][x1 + size]) != [0] * size:
+            if list(world[y1][x1:x1 + size]) != [0] * size:
+                print list(world[y1][x1:x1 + size])
                 return False
             world[y1][x1 + size] = 1
         else:
-            if list(world.T[x1][y1 + size]) != [0] * size:
+            if list(world.T[x1][y1:y1 + size]) != [0] * size:
+                print list(world[y1][x1:x1 + size])
                 return False
             world.T[x1][y1 + size] = 1
     except IndexError:
@@ -42,6 +44,7 @@ class Game():
 
         self.state = states.INIT
         self.ready_to_start = False
+        self.playing = False
         self.game_running = True
         self.thread = threading.Thread(target = lambda:self.game_thread())
 
@@ -69,6 +72,7 @@ class Game():
                     continue
                 self.parent.ready_to_start(self, self.get_conf())
             elif self.state == states.PLAY:
+                self.playing = True
                 if len(self.activeplayers) == 1:
                     self.winner()
                 if self.turn_waiting:
