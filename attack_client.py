@@ -92,9 +92,7 @@ def user_move(board, isHit):
 def computer_move(board):
     pass
 
-def main(coordinate, isHit):
-    # types of ships
-    oppo_board = [[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
+oppo_board = [[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
              [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
              [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
              [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
@@ -107,6 +105,12 @@ def main(coordinate, isHit):
              {'Submarine': 3, 'Battleship': 4, 'Patrol Boat': 2, 'Aircraft Carrier': 5, 'Destroyer': 3}
              ]
 
+def main(coordinate, isHit):
+
+    #isHit= 'hit'/'miss'
+
+    global oppo_board
+
     # setup blank 10x10 board
     board = []
     for i in range(10):
@@ -115,44 +119,12 @@ def main(coordinate, isHit):
             board_row.append(-1)
         board.append(board_row)
 
-    # setup user and computer boards
-    #user_board = copy.deepcopy(board)
-    #comp_board = copy.deepcopy(board)
 
-    # add ships as last element in the array
-    #user_board.append(copy.deepcopy(ships))
-    #comp_board.append(copy.deepcopy(ships))
+    oppo_board = user_move(oppo_board, isHit)
 
-    # ship placement
-    #user_board = user_place_ships(user_board, ships)
-    #comp_board = computer_place_ships(comp_board, ships)
+    print_board("c", oppo_board)
 
-    # game main loop
-    while (1):
 
-        # user move
-        #print_board("c", comp_board)
-        oppo_board = user_move(oppo_board, isHit)
 
-        # check if user won
-        if oppo_board == "WIN":
-            print "User WON! :)"
-            quit()
 
-        # display current computer board
-        print_board("c", oppo_board)
-
-        #raw_input("To end user turn hit ENTER")
-
-        # computer move
-        #user_board = computer_move(user_board)
-
-        # check if computer move
-        #if user_board == "WIN":
-            #print "Opponenet WON! :("
-            #quit()
-
-        # display user board
-        #print_board("u", user_board)
-        #raw_input("To end computer turn hit ENTER")
 
