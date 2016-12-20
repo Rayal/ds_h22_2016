@@ -26,6 +26,9 @@ def message_in(server_obj, client, payload_list):
     elif payload_list[0] == CREATE_GAME and len(payload_list) >= 2:
         create_game(server_obj, client, payload_list[1:])
 
+    elif payload_list[0] == DISCONNECT and len(payload_list) >= 2:
+        disconnect(server_obj, client, payload_list[1:])
+
     else:
         LOG.debug("Received message was too short.")
 
@@ -79,3 +82,6 @@ def create_game(server_obj, mqtt, args):
         # The response is the game id, in int
         mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, SERVER, server_obj.self, client)), ' '.join((CREATE_GAME, str(response))))
         mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GAME, server_obj.self, str(response), ACK)), YEA, True)
+
+def disconnect(server_obj, mqtt, args):
+    server_obj.disconnect(args[0])

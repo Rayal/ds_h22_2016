@@ -53,14 +53,16 @@ class Client():
     def stop(self):
         try:
             mqtt_publish(self.mqtt,
-                '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.game_id)),
+                '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
                 ' '.join((EXIT, self.self)))
-        except NameError:
+        except AttributeError:
             pass
 
         mqtt_publish(self.mqtt,
             '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)),
             ' '.join((DISCONNECT, self.self)))
+
+        self.mqtt.disconnect()
 
 # mqtt topics - add, remove, subscribe and unscribe ---------------------------
     def add_topic(self, topic):
@@ -137,7 +139,10 @@ class Client():
             self.server = 'DEBUG_S'
             self.nickname = 'DEBUG_NAME'
         else:
-            self.server, self.nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
+            try:
+                self.server, self.nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
+            except ValueError:
+                return states.RET_NOK
         if not self.server in self.servers:
             return states.RET_NOK
         self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server, self.self)))
