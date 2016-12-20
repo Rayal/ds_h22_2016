@@ -185,47 +185,23 @@ class Server():
             res -= 3
         return res
 
-    def ready_to_start(self, game_id, args_list):
-        pass
-
     def start_game(self, game_id, args_list):
-        pass
-
-    def play_turn(self, game_id, args_list):
-        pass
+        game = self.game_from_id(game_id)
+        if not game:
+            return False
+        return game.start_game()
 
     def shoot(self, game_id, args_list):
-        pass
+        client_name = args_list[0]
+        if not client_name in self.clients:
+            return
+        player = self.nicknames[self.clients.index(client)]
 
-    def splash(self, game_id, args_list):
-        pass
+        game = self.game_from_id(game_id)
+        if not game:
+            return
 
-    def boom(self, game_id, args_list):
-        pass
-
-    def hit(self, game_id, args_list):
-        pass
-
-    def sunk(self, game_id, args_list):
-        pass
-
-    def game_over(self, game_id, args_list):
-        pass
-
-    def replay_game(self, game_id, args_list):
-        pass
-
-    def game_end(self, game_id, args_list):
-        pass
-
-    def disconnect(self, game_id, args_list):
-        pass
-
-    def reconnect(self, game_id, args_list):
-        pass
-
-    def new_host(self, game_id, args_list):
-        pass
+        game.shoot(player, args_list[2:], args_list[1])
 
 
 server = Server()

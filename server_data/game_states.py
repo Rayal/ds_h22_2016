@@ -15,3 +15,5 @@ state_transitions = {
 }
 
 DEFAULT_TURN_SPEED = 180
+
+DEFAULT_WAIT_TIME = 240

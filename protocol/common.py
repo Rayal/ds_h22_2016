@@ -60,6 +60,8 @@ GAME_END =        '212'
 DISCONNECT =      '213'
 RECONNECT =       '214'
 NEW_HOST =        '215'
+LOST =            '216'
+WON =             '217'
 GAME_TYPES = {
     GAME_SETUP:     "GAME_SETUP",
     SHIP_POS:       "SHIP_POS",
@@ -75,8 +77,10 @@ GAME_TYPES = {
     REPLAY_GAME:    "REPLAY_GAME",
     GAME_END:       "GAME_END",
     DISCONNECT:     "DISCONNECT",
-    RECONNECT:       "RECONNECT",
-    NEW_HOST:        "NEW_HOST"
+    RECONNECT:      "RECONNECT",
+    NEW_HOST:       "NEW_HOST",
+    LOST:           "LOST",
+    WON:            "WON"
 }
 
 #YEA, NAY and ACK
@@ -107,6 +111,7 @@ SHIP_POSITIONS = {
 
 DEFAULT_WAIT_TIME = 5
 
+#
 def mqtt_publish(mqtt_client, topic, payload = None, retain = False):
     LOG.debug("Sending: %s - %s" % (topic, payload))
     mqtt_client.publish(topic, payload, retain = retain)

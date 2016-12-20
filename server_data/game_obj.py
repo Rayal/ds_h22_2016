@@ -50,13 +50,13 @@ class Game():
         self.turn_waiting_since = 0
 
         self.thread.start()
-        self.player_moves = defaultdict(lambda:(None, None))
+        self.player_moves = defaultdict(lambda:(None, None, None))
 
     def game_thread(self):
         LOG.debug('Game %d thread started.' % self.id)
         self.last_action_time = int(time())
         while self.game_running:
-            if int(time()) - self.last_action_time > states.DEFAULT_TURN_SPEED:
+            if int(time()) - self.last_action_time > states.DEFAULT_WAIT_TIME:
                 break
             sleep(1)
             if self.state == states.INIT:
@@ -69,6 +69,8 @@ class Game():
                     continue
                 self.parent.ready_to_start(self, self.get_conf())
             elif self.state == states.PLAY:
+                if len(self.activeplayers) == 1:
+                    self.winner()
                 if self.turn_waiting:
                     if int(time.time()) - self.turn_waiting_since >= wait_time:
                         self.turn_timeout()
@@ -87,7 +89,7 @@ class Game():
         # Cleanup before destroying.
         mqtt_publish(self.parent.client,
         '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), ACK)),
-        '', True)
+        'GAME_OVER', True)
         self.parent.client.remove_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id))))
         LOG.debug('Game %d thread ended.' % self.id)
         self.parent.remove_game(self)
@@ -113,6 +115,8 @@ class Game():
                     SPLASH)
 
     def send_turn(self, player):
+        self.player_moves[player] = (None, None, None)
+
         mqtt_publish(self.parent.client,
             '/'.join((DEFAULT_ROOT_TOPIC,
                 GAME,
@@ -215,7 +219,10 @@ class Game():
         return True
 
     def shoot(self, player, coords, victim):
-        pass
+        self.last_action_time = int(time())
+        coords = list(np.array(coords).astype(int))
+        victim = int(victim)
+        self.player_moves[player] = coords + [self.players[victim]]
 
     def shot_message(self, player, coords, aggressor):
         client = self.parent.client_from_nickname(player)
@@ -229,24 +236,42 @@ class Game():
             '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), player)),
             ' '.join((SUNK, str(ship), player)))
 
+    def player_lost(self, player):
+        for p in self.players:
+            mqtt_publish(self.parent.client,
+        '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), p)),
+        ' '.join((LOST, player)))
+        self.activeplayers.remove(player)
+
+    def winner(self):
+        for player in self.players:
+            mqtt_publish(self.parent.client,
+                '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id),
+                player)),
+                ' '.join((WON, self.activeplayers[0])))
+
     def check_sunk(self, player, coords):
         n_x, n_y = coords
-        ship = None
-        for [size, x, y, d] in self.player_ships[player]:
+        d_ship = None
+        for ship in self.player_ships[player]:
+            size, x, y, d = ship
             if d == HORIZONTAL:
                 if n_x >= x and (n_x < x + size) and n_y == y:
-                    ship = [size, x, y, d]
+                    d_ship = ship
                     break
             else:
                 if n_y >= y and (n_y < y + size) and n_x == x:
-                    ship = [size, x, y, d]
+                    d_ship = ship
                     break
 
 
-        ship = list(get_ship(self.boards[player], ship[0], ship[1:-1], ship[-1] == HORIZONTAL))
+        ship = list(get_ship(self.boards[player], d_ship[0], d_ship[1:-1], d_ship[-1] == HORIZONTAL))
 
         if ship.count(2) == len(ship):
+            self.player_ships[player].remove(d_ship)
             self.sunk_message(len(ship), player)
+            if len(self.playerself.player_ships[player]) == 0:
+                self.player_lost(player)
 
     def play_move(self, player, move):
         if move[0] >= self.size[0] or move[1] >= self.size[1]:
