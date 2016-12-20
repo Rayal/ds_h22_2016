@@ -14,8 +14,7 @@ from time import sleep, time
 from game_logic import main
 from collections import defaultdict
 
-#def compile_servername(nickname, servername):
-# Client class to initiate client object --------------------------------------
+# Client class to instantiate client object -----------------------------------
 class Client():
     def __init__(self):
         self.self = SELF + 'C'
@@ -79,20 +78,21 @@ class Client():
             LOG.info("Subscribing to: %s" % topic)
             self.mqtt.subscribe(topic)
 
-# Connect the client to server ------------------------------------------------
+    '''Connect the client to server ------------------------------------------------
+    @params : client, userdata, flags
+    calls function: sub_to topics  to subscribe
+    '''
+
     def on_connect(self, client, userdata, flags, rc):
         LOG.info("Connected with result code "+str(rc))
         self.sub_to_topics()
 
-# Client run method - find available servers, connect to server, get the game list in a server
+    ''' Client run method - find available servers, connect to server, get the game list in a server
+    It works like a state machine
+    And defines what state should be followed next
+    '''
     def run_state(self):
-        #if self.waiting:
-        #    if int(time()) - self.waiting_since >= self.wait_time:
-        #        self.waiting = False
-        #        ret = states.RET_TIMEOUT
-        #    else:
-        #        return
-        #else:
+
         if self.state == states.FIND_SERVERS:
             ret = self.find_servers()
         elif self.state == states.CONNECT_SERVER:
@@ -108,15 +108,14 @@ class Client():
         else:
             ret = states.RET_NOK
 
-            #if ret == states.RET_WAIT:
-            #    self.wait_time = 3
-            #    self.waiting_since = int(time())
-            #    self.waiting = True
 
         LOG.debug('Retcode from state %s: %s' % (states.states[self.state], states.state_ret[ret]))
         self.state = states.state_transitions[(ret, self.state)]
 
-# Function find_servers to get a list of online servers -----------------------
+    '''Function find_servers to get a list of online servers -----------------------
+    @params : self
+    Outputs : finds a list of online available servers using the SOUND_OFF function
+    '''
 
     def find_servers(self):
         LOG.debug("Finding online servers")
@@ -129,7 +128,10 @@ class Client():
             # TODO: Timeout, to give up
             return states.RET_RETRY
 
-# Response with the available server list -------------------------------------
+    '''Response with the available server list -------------------------------------
+    @params: A response containing the names of available servers
+    Output : Prints the list of available servers
+    '''
     def found_server(self, server_name):
         try:
             self.servers.append(server_name)
@@ -137,7 +139,11 @@ class Client():
         except NameError:
             LOG.error("Tried to append a servername to a non-existent list.")
 
-# Function connect_to_server with the server the client wants from the list of available servers
+    '''Function connect_to_server to connect with the server the client wants from the list of available servers
+    Function conn_req from the client_functions.py is used
+    @params : self
+    Output :  Connection request successful or again a retry
+    '''
     def connect_to_server(self):
         print("Server list: " + ', '.join(self.servers))
         if DEBUG:
@@ -157,16 +163,12 @@ class Client():
         if self.server_response[self.state] == YEA:
             return states.RET_OK
         return states.RET_NOK
-        #self.server = ''
-        #nickname = ''
-        #while not self.server in self.servers:
-        #    print("Server list: " + ', '.join(self.servers))
-        #    self.server, nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
-        #self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server, self.self)))
-        #mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, server)), ' '.join((CONN_REQ, self.self, nickname)))
-        #return states.RET_WAIT
 
-# Function conn_req to get the response from the connect_to_server function ---
+
+    '''Function conn_req to get the response from the connect_to_server function ---
+    @params: A response from the conn_req function of client_functions.py
+    Output : Connection successful or not
+    '''
     def conn_req(self, response):
         if self.state != states.CONNECT_SERVER:
             return
@@ -175,7 +177,10 @@ class Client():
         else:
             self.server_response[self.state] = NAY
 
-# Function get_game_list to get the list from the connected server ---------------
+    '''Function get_game_list to get the list from the connected server ---------------
+    @params: self
+    Output : The open games list in the format - GAMEID GAMENAME NICKNAME separated by a separator
+    '''
     def get_game_list(self):
         self.games_list = []
         mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((GAME_LIST_REQ, self.self)))
@@ -185,15 +190,14 @@ class Client():
         else:
             print('No games found open on the server.')
 
-        #BUI.screen_function(self.server_response[self.state], compile_servername)
 
         id = '_'.join(raw_input('Select a gameID to join. Leave this space blank if you want to create your own. ').split(' '))
-        #print id
-        #print self.server_response[self.state]
         if id == '':
             return states.RET_RETRY
 
-# join the existing game from the list of games available ---------------------
+        '''JOIN THE EXISTING GAME from the list of games available ---------------------
+        From the list of available games, the user inputs the id of the game he wants to join in
+        '''
         if id in self.server_response[self.state]:
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((JOIN_GAME, self.self, id)))
             sleep(DEFAULT_WAIT_TIME)
@@ -204,7 +208,11 @@ class Client():
                 print("Can not connect to given gameid")
                 return states.RET_NOK
 
-# create a new game -----------------------------------------------------------
+            '''CREATE A NEW GAME ----------------------------------------------
+            From the list of available games, if the user does not want to join any game,
+            he should create one by giving a new gamename
+            '''
+
         else:
             newGameName = '_'.join(raw_input('Enter new gameName. ').split(' '))
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CREATE_GAME, self.self, newGameName)))
@@ -223,6 +231,10 @@ class Client():
             return states.RET_OK
         return states.RET_ALT
 
+    '''Function to send the configuration of the game - the board dimensions and the ship sizes
+    @params: self
+    Output : Returns states OK or Retry
+    '''
     def send_conf(self):
         mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)), ' '.join((GAME_SETUP, self.self, '10 10 5 4 3 3 2')))
         sleep(DEFAULT_WAIT_TIME)
@@ -230,21 +242,30 @@ class Client():
             return states.RET_RETRY
         return states.RET_OK
 
-# Function game_list to get the response from the get_game_list function ------
+    '''Function game_list to get the response from the get_game_list function ------
+    @params: A response from the game_list_req function from the client_functions.py file
+    Output : the game list
+    '''
     def game_list(self, response):
         resp = response[0]
         resp = '\n'.join(resp.split(OBJ_SEP))
         resp = ' '.join(resp.split(SUB_OBJ_SEP))
         self.server_response[self.state] = resp
 
-# Function created_game to get the response from the create_game (new) function
+    '''Function created_game to get the response from the create_game (new) function
+    @params: A response from the create_game function from the client_functions.py file
+    Output : the created game
+    '''
     def created_game(self, response):
         self.server_response[self.state] = response
 
-# Function joined_game to get the response from the join_game (existing) function
+    '''Function joined_game to get the response from the join_game (existing) function
+    '''
     def joined_game(self, response):
         self.server_response[self.state] = response[0]
 
+    '''Function set_ships to set the ships at some coordinates
+    '''
     def set_ships(self):
         msg = main(self)
         mqtt_publish(self.mqtt,
@@ -253,27 +274,40 @@ class Client():
         sleep(DEFAULT_WAIT_TIME)
         return states.RET_OK
 
+    '''Function start_game to start the game
+    @params: self
+    Output: Retry or Ok state
+    '''
     def start_game(self):
-        #mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
-        #             ' '.join((START_GAME, self.self)))
-        #sleep(DEFAULT_WAIT_TIME)
 
         if self.server_response[self.state] == NAY:
             return states.RET_RETRY
         print self.server_response[self.state]
         return states.RET_RETRY
 
+    '''Function to use the UI and call the functions of the game logic'''
     def main(self):
         return states.RET_NOK
 
+    '''Function game_Setup_reply to get the response from the game_setup function
+        @params: A response from the game_setup  function from the game_functions.py file as a "YEA" or "NAY"
+    '''
     def game_setup_reply(self, response):
         LOG.debug("Got setup reply: %s" % response)
         self.server_response[self.state] = response
 
+    '''Function ship_pos_reply to get the response from the ship_pos function
+        @params: A response from the ship_pos function from the game_functions.py file as a "YEA" or "NAY"
+    '''
 
     def ship_pos_reply(self, response):
         LOG.debug("Got setup reply: %s" % response)
         self.server_response[self.state] = response
+
+    '''Function ready_to_start_reply to get the response from the ready_to_start function
+            @params: A response from the ready_to_start function from the game_functions.py file as a "READY_TO_START"
+            Output : PLAYING state
+        '''
 
     def ready_to_start_reply(self, response):
         LOG.debug("Got ready to start reply: %s" % response)
@@ -282,6 +316,11 @@ class Client():
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
                          ' '.join((START_GAME, self.self)))
             self.state = states.PLAYING
+
+    '''Function play_turn_reply to get the response from the play_turn function
+        @params: A response from the play_turn function from the game_functions.py file as a "PLAY_TURN"
+
+         '''
 
     def play_turn_reply(self,response):
         LOG.debug("Play Turn reply: %s" % response)
@@ -294,6 +333,10 @@ class Client():
         sleep(DEFAULT_WAIT_TIME)
         return states.RET_OK
 
+    '''Function shoot_reply to get the response from the shoot function
+            @params: A response from the shoot function from the game_functions.py file as a NAY, SPLASH or BOOM
+
+        '''
     def shoot_reply(self,response):
         LOG.debug("Shoot reply: %s" % response[-1])
         self.server_response[self.state] = response[-1]
@@ -302,32 +345,41 @@ class Client():
         elif self.server_response[self.state] == SPLASH:
             print ("MISSED SHOT")
         elif self.server_response[self.state] == BOOM:
-            print ("CONGRATS...YOU GOT A HIT!")
+            print ("YAE...YOU GOT A HIT!")
 
+    '''Function hit to get response from the function hit in the game_functions.py file as a HIT or NOt
+    '''
 
     def hit(self, response):
         print 'You have been hit by %s in: (%d:%d)'%((response[-1], int(response[0]) + 1, int(response[0]) + 1))
         #Do other stuff
 
+    '''Function sunk to get response from the function sunk in the game_functions.py file if the ships sunk or not
+        '''
     def sunk(self, response):
         if response[-1] == self.nickname:
             print 'Your ship size %s has been sunk' %response[0]
         else:
             print "%s's ship size %s has been sunk" % (response [-1], response[0])
 
+    '''Function lost to get response from the function lost in the game_functions.py file if the ships sunk and who lost
+            '''
     def lost(self, response):
         if response[-1] == self.nickname:
             print 'You lost'
         else:
             print "%s has lost" %response [-1]
 
-
+    '''Function won to get response from the function won in the game_functions.py file if the ships sunk and who won
+                '''
     def won(self,response):
         if response[-1] == self.nickname:
             print 'You won'
         else:
             print "%s has lost" %response [-1]
 
+    '''Function game_over to get response from the function game_over in the game_functions.py file if the game is over
+                '''
     def game_over(self,response):
         if response[-1] == GAME_OVER:
             print 'Game over'
