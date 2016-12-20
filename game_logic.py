@@ -45,7 +45,7 @@ def user_place_ships(board, ships):
         while (not valid):
 
             print_board("u", board)
-            print "Placing a/an " + ship
+            print "Placing a " + ship
             x, y = get_coor()
             ori = v_or_h()
             valid = validate(board, ships[ship], x, y, ori)
@@ -108,20 +108,20 @@ def get_coor():
         user_input = raw_input("Please enter coordinates (row,col) ? ")
         try:
             # see that user entered 2 values seprated by comma
-            coor = user_input.split(",")
-            if len(coor) != 2:
+            coo = user_input.split(",")
+            if len(coo) != 2:
                 raise Exception("Invalid entry, too few/many coordinates.");
 
             # check that 2 values are integers
-            coor[0] = int(coor[0]) - 1
-            coor[1] = int(coor[1]) - 1
+            coo[0] = int(coo[0]) - 1
+            coo[1] = int(coo[1]) - 1
 
             # check that values of integers are between 1 and 10 for both coordinates
-            if coor[0] > 9 or coor[0] < 0 or coor[1] > 9 or coor[1] < 0:
+            if coo[0] > 9 or coo[0] < 0 or coo[1] > 9 or coo[1] < 0:
                 raise Exception("Invalid entry. Please use values between 1 to 10 only.")
 
             # if everything is ok, return coordinates
-            return coor
+            return coo
 
         except ValueError:
             print "Invalid entry. Please enter only numeric values for coordinates"
@@ -131,8 +131,8 @@ def get_coor():
 
 def main(clientObj):
     #nickname = clientObj.nickname
-
     # types of ships
+
     ships = {"Aircraft Carrier": 5,
              "Battleship": 4,
              "Submarine": 3,
@@ -150,21 +150,7 @@ def main(clientObj):
     # setup user and computer boards
     user_board = copy.deepcopy(board)
 
-
-    # add ships as last element in the array
-    #user_board.append(copy.deepcopy(ships))
-
-
     # ship placement
-
     user_board = user_place_ships(user_board, ships)
 
-
-
-    # game main loop
-    while (1):
-
-        # display user board
-        print_board("u", user_board)
-
-
+    print_board("u", user_board)
