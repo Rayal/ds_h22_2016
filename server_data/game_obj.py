@@ -18,14 +18,14 @@ def set_ship(world, args, horizontal):
     try:
         if horizontal:
             if list(world[y1][x1:x1 + size]) != [0] * size:
-                print list(world[y1][x1:x1 + size])
+                print (args, list(world[y1][x1:x1 + size]))
                 return False
-            world[y1][x1 + size] = 1
+            world[y1][x1:x1 + size] = 1
         else:
             if list(world.T[x1][y1:y1 + size]) != [0] * size:
-                print list(world[y1][x1:x1 + size])
+                print (args, list(world[y1][x1:x1 + size]))
                 return False
-            world.T[x1][y1 + size] = 1
+            world.T[x1][y1:y1 + size] = 1
     except IndexError:
         return False
     return True
@@ -70,7 +70,18 @@ class Game():
                 if not (self.config_done and self.check_ready()):
                     self.state = states.INIT
                     continue
-                self.parent.ready_to_start(self, self.get_conf())
+                mqtt_publish(
+                    self.parent.client,
+                    '/'.join((DEFAULT_ROOT_TOPIC,
+                        GAME,
+                        self.parent.self,
+                        str(self.id),
+                        ACK)),
+                    ' '.join((
+                        GAME_SETUP,
+                        self.conf,
+                        READY_TO_START)))
+                        
             elif self.state == states.PLAY:
                 self.playing = True
                 if len(self.activeplayers) == 1:
@@ -92,8 +103,9 @@ class Game():
                 pass
         # Cleanup before destroying.
         mqtt_publish(self.parent.client,
-        '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), ACK)),
-        'GAME_OVER', True)
+            '/'.join((
+                DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), ACK)),
+            'GAME_OVER', True)
         self.parent.remove_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id))))
         LOG.debug('Game %d thread ended.' % self.id)
         self.parent.remove_game(self)
@@ -156,6 +168,7 @@ class Game():
         if self.config_done: # Conf can only be done once.
             return False
 
+        self.conf = ' '.join(list(size) + ship_list)
         ship_list = np.array(ship_list).astype(int)
         size = np.array(size).astype(int)
         if size[0] > 10 or size[1] > 10:
@@ -231,27 +244,44 @@ class Game():
     def shot_message(self, player, coords, aggressor):
         client = self.parent.client_from_nickname(player)
         mqtt_publish(self.parent.client,
-        '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), player)),
-        ' '.join((HIT, ) + coords[0] + (aggressor, )))
+            '/'.join((DEFAULT_ROOT_TOPIC,
+                GAME,
+                self.parent.self,
+                str(self.id),player)),
+            ' '.join((HIT,) + coords[0] + (aggressor,)))
 
     def sunk_message(self, ship, player):
         for player in self.players:
             mqtt_publish(self.parent.client,
-            '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), player)),
-            ' '.join((SUNK, str(ship), player)))
+                '/'.join(
+                    (DEFAULT_ROOT_TOPIC,
+                    GAME,
+                    self.parent.self,
+                    str(self.id),
+                    player)),
+                ' '.join((SUNK, str(ship), player)))
 
     def player_lost(self, player):
         for p in self.players:
             mqtt_publish(self.parent.client,
-        '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), p)),
-        ' '.join((LOST, player)))
+                '/'.join((
+                    DEFAULT_ROOT_TOPIC,
+                    GAME,
+                    self.parent.self,
+                    str(self.id),
+                    p)),
+                ' '.join((LOST, player)))
         self.activeplayers.remove(player)
 
     def winner(self):
         for player in self.players:
             mqtt_publish(self.parent.client,
-                '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id),
-                player)),
+                '/'.join((
+                    DEFAULT_ROOT_TOPIC,
+                    GAME,
+                    self.parent.self,
+                    str(self.id),
+                    player)),
                 ' '.join((WON, self.activeplayers[0])))
 
     def check_sunk(self, player, coords):

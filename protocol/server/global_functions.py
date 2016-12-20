@@ -1,8 +1,9 @@
 # Setup Python logging --------------------------------------------------------
 import logging
+from sys import argv
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
-LOG = logging.getLogger()
+LOG = logging.getLogger(argv[0])
 
 from protocol.common import *
 
@@ -20,4 +21,6 @@ def message_in(server_obj, client, payload_list):
 
 
 def sound_off(server_obj, mqtt, client):
-    mqtt_publish(mqtt, "/".join((DEFAULT_ROOT_TOPIC, GLOBAL, client)), " ".join((SOUND_OFF,server_obj.self)))
+    mqtt_publish(mqtt,
+        "/".join((DEFAULT_ROOT_TOPIC, GLOBAL, client)),
+        " ".join((SOUND_OFF,server_obj.self)))
