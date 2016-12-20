@@ -13,17 +13,13 @@ from protocol.common import *
 from time import sleep, time
 from game_logic import main
 
-
-# Client extension ------------------------------------------------------------
-
-SELF += 'C'
-
 #def compile_servername(nickname, servername):
 # Client class to initiate client object --------------------------------------
 class Client():
     def __init__(self):
+        self.self = SELF + 'C'
         self.topics = []
-        self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GLOBAL, SELF)))
+        self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GLOBAL, self.self)))
 
         self.mqtt = mqtt.Client()
         self.mqtt.on_connect = lambda client, userdata, flags, rc: self.on_connect(client, userdata, flags, rc)
@@ -53,6 +49,18 @@ class Client():
         while True:
             self.run_state()
             sleep(DEFAULT_WAIT_TIME)
+
+    def stop(self):
+        try:
+            mqtt_publish(self.mqtt,
+                '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.game_id)),
+                ' '.join((EXIT, self.self)))
+        except NameError:
+            pass
+
+        mqtt_publish(self.mqtt,
+            '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)),
+            ' '.join((DISCONNECT, self.self)))
 
 # mqtt topics - add, remove, subscribe and unscribe ---------------------------
     def add_topic(self, topic):
@@ -106,7 +114,7 @@ class Client():
     def find_servers(self):
         LOG.debug("Finding online servers")
         self.servers = []
-        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GLOBAL)), ' '.join((SOUND_OFF, SELF)))
+        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GLOBAL)), ' '.join((SOUND_OFF, self.self)))
         sleep(DEFAULT_WAIT_TIME)
         if len(self.servers):
             return states.RET_OK
@@ -132,9 +140,9 @@ class Client():
             self.server, self.nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
         if not self.server in self.servers:
             return states.RET_NOK
-        self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server, SELF)))
+        self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server, self.self)))
         self.server_response[self.state] = NAY
-        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CONN_REQ, SELF, self.nickname)))
+        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CONN_REQ, self.self, self.nickname)))
         sleep(DEFAULT_WAIT_TIME)
         if self.server_response[self.state] == YEA:
             return states.RET_OK
@@ -144,8 +152,8 @@ class Client():
         #while not self.server in self.servers:
         #    print("Server list: " + ', '.join(self.servers))
         #    self.server, nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
-        #self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server, SELF)))
-        #mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, server)), ' '.join((CONN_REQ, SELF, nickname)))
+        #self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server, self.self)))
+        #mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, server)), ' '.join((CONN_REQ, self.self, nickname)))
         #return states.RET_WAIT
 
 # Function conn_req to get the response from the connect_to_server function ---
@@ -160,7 +168,7 @@ class Client():
 # Function get_game_list to get the list from the connected server ---------------
     def get_game_list(self):
         self.games_list = []
-        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((GAME_LIST_REQ, SELF)))
+        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((GAME_LIST_REQ, self.self)))
         sleep(DEFAULT_WAIT_TIME)
         if self.server_response[self.state] != '':
             print('Currently open games:' + self.server_response[self.state])
@@ -177,7 +185,7 @@ class Client():
 
 # join the existing game from the list of games available ---------------------
         if id in self.server_response[self.state]:
-            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((JOIN_GAME, SELF, id)))
+            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((JOIN_GAME, self.self, id)))
             sleep(DEFAULT_WAIT_TIME)
             if self.server_response[self.state] == id:
                 print("Connected to Game", id)
@@ -187,7 +195,7 @@ class Client():
 # create a new game -----------------------------------------------------------
         else:
             newGameName = '_'.join(raw_input('Enter new gameName. ').split(' '))
-            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CREATE_GAME, SELF, newGameName)))
+            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CREATE_GAME, self.self, newGameName)))
             sleep(DEFAULT_WAIT_TIME)
             if self.server_response[self.state] != '':
                 newgameIDcreated = self.server_response[self.state]
@@ -203,7 +211,10 @@ class Client():
 
 # Function game_list to get the response from the get_game_list function ------
     def game_list(self, response):
-        self.server_response[self.state] = response[0]
+        resp = response[0]
+        resp = '\n'.join(resp.split(OBJ_SEP))
+        resp = ' '.join(resp.split(SUB_OBJ_SEP))
+        self.server_response[self.state] = resp
 
 # Function created_game to get the response from the create_game (new) function
     def created_game(self, response):
@@ -218,6 +229,7 @@ class Client():
         return states.RET_OK
 
 client = Client()
-client.run()
-
-
+try:
+    client.run()
+except KeyboardInterrupt:
+    client.stop()

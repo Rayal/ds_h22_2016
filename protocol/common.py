@@ -14,7 +14,7 @@ DEFAULT_SERVER_URL = "iot.eclipse.org"
 DEFAULT_ROOT_TOPIC = "DS2016_BATTLESHIP"
 DEFAULT_ROOT_LEN = len(DEFAULT_ROOT_TOPIC) + 1
 
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     SELF = 'DEBUG_'
@@ -57,7 +57,7 @@ SUNK =            '209'
 GAME_OVER =       '210'
 REPLAY_GAME =     '211'
 GAME_END =        '212'
-DISCONNECT =      '213'
+EXIT =            '213'
 RECONNECT =       '214'
 NEW_HOST =        '215'
 LOST =            '216'

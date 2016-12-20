@@ -6,14 +6,19 @@ LOG = logging.getLogger()
 
 import paho.mqtt.client as mqtt
 import protocol.server.server_protocol as sp
-from protocol.common import *
 from server_data.game_obj import Game
 import random as rnd
+from sys import argv
+
+from protocol.common import *
 
 class Server():
     #Constructor. Creates Server object, initializes values.
-    def __init__(self):
-        self.self = SELF + 'S'
+    def __init__(self, ID = ''):
+        if ID == '':
+            self.self = SELF + 'S'
+        else:
+            self.self = ID
         self.topics = []
         self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GLOBAL)))
         self.topics.append("/".join((DEFAULT_ROOT_TOPIC, SERVER, self.self)))
@@ -203,8 +208,10 @@ class Server():
 
         game.shoot(player, args_list[2:], args_list[1])
 
-
-server = Server()
+if len(argv) >= 2:
+    server = Server(argv[1])
+else:
+    server = Server()
 try:
     server.start()
 except KeyboardInterrupt:

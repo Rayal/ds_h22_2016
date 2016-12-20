@@ -90,7 +90,7 @@ class Game():
         mqtt_publish(self.parent.client,
         '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), ACK)),
         'GAME_OVER', True)
-        self.parent.client.remove_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id))))
+        self.parent.remove_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id))))
         LOG.debug('Game %d thread ended.' % self.id)
         self.parent.remove_game(self)
         del self
