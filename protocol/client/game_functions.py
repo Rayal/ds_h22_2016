@@ -19,8 +19,6 @@ def message_in(client_obj, client, topic_list, payload_list):
         ship_pos(client_obj, client, topic_list, payload_list[1:])
     elif payload_list[0] == READY_TO_START and len(payload_list) >= 2:
         ready_to_start(client_obj, client, topic_list, payload_list[1:])
-    elif payload_list[0] == START_GAME and len(payload_list) >= 2:
-        start_game(client_obj, client, topic_list, payload_list[1:])
     elif (payload_list[0] == SPLASH or payload_list[0] == BOOM or payload_list[0] == SHOOT) and len(payload_list) >= 2:
         shoot(client_obj, client, topic_list, payload_list)
     elif payload_list[0] == HIT and len(payload_list) >= 2:
@@ -35,6 +33,19 @@ def message_in(client_obj, client, topic_list, payload_list):
         game_over(client_obj, client, topic_list, payload_list[1:])
     else:
         LOG.debug("Received message was too short.")
+
+''' Functions to get the response from the server through mqtt for all game setup and functions
+game_setup - to set up all the game configurations
+ship_pos - position the ships
+ready_to_start - te game is ready to be started
+play_turn - user play turns
+shoot - user shoots at coordinates
+hit - user hits his own ship
+sunk - the ship sunks
+lost - user who lost
+won - user who won
+game_over - once when the game is over
+'''
 
 def game_setup(client_obj, mqtt_client, topic_list, payload_list):
     client_obj.game_setup_reply(payload_list[-1])

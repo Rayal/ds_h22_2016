@@ -21,7 +21,12 @@ def message_in(client_obj, client, topic_list, payload_list):
     elif payload_list[0] == CREATE_GAME:
         create_game(client_obj, client, payload_list[1:])
 
-
+''' Functions to get the response from the server through mqtt
+conn_req - For connection establishment
+game_list_req - To get the list of available games
+join_game - to join an existing game
+create_game - to create a new game
+'''
 
 def conn_req(client_obj, mqtt, args):
     LOG.debug("Received message: %s"%args[0])
