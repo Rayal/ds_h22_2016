@@ -127,7 +127,7 @@ class Game():
             PLAY_TURN)
 
     def check_ready(self):
-        if len(players) < 2 or len(boards) < len(players):
+        if len(self.players) < 2 or len(self.boards) < len(self.players):
             self.ready_to_start = False
             return False
         self.ready_to_start = True
