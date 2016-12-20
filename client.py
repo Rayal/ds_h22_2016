@@ -253,6 +253,16 @@ class Client():
         sleep(DEFAULT_WAIT_TIME)
         return states.RET_OK
 
+    def start_game(self):
+        #mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
+        #             ' '.join((START_GAME, self.self)))
+        #sleep(DEFAULT_WAIT_TIME)
+
+        if self.server_response[self.state] == NAY:
+            return states.RET_RETRY
+        print self.server_response[self.state]
+        return states.RET_RETRY
+
     def main(self):
         return states.RET_NOK
 
@@ -264,6 +274,63 @@ class Client():
     def ship_pos_reply(self, response):
         LOG.debug("Got setup reply: %s" % response)
         self.server_response[self.state] = response
+
+    def ready_to_start_reply(self, response):
+        LOG.debug("Got ready to start reply: %s" % response)
+        self.server_response[self.state] = response
+        if self.server_response[self.state] == READY_TO_START:
+            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
+                         ' '.join((START_GAME, self.self)))
+            self.state = states.PLAYING
+
+    def play_turn_reply(self,response):
+        LOG.debug("Play Turn reply: %s" % response)
+        self.server_response[self.state] = response
+        COR = raw_input('Enter coordinates. ')
+        if self.server_response[self.state] == PLAY_TURN:
+            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
+                         ' '.join((SHOOT, self.self, '0', COR)))
+
+        sleep(DEFAULT_WAIT_TIME)
+        return states.RET_OK
+
+    def shoot_reply(self,response):
+        LOG.debug("Shoot reply: %s" % response[-1])
+        self.server_response[self.state] = response[-1]
+        if self.server_response[self.state] == NAY:
+            return states.RET_RETRY
+        elif self.server_response[self.state] == SPLASH:
+            print ("MISSED SHOT")
+        elif self.server_response[self.state] == BOOM:
+            print ("CONGRATS...YOU GOT A HIT!")
+
+
+    def hit(self, response):
+        print 'You have been hit by %s in: (%d:%d)'%((response[-1], int(response[0]) + 1, int(response[0]) + 1))
+        #Do other stuff
+
+    def sunk(self, response):
+        if response[-1] == self.nickname:
+            print 'Your ship size %s has been sunk' %response[0]
+        else:
+            print "%s's ship size %s has been sunk" % (response [-1], response[0])
+
+    def lost(self, response):
+        if response[-1] == self.nickname:
+            print 'You lost'
+        else:
+            print "%s has lost" %response [-1]
+
+
+    def won(self,response):
+        if response[-1] == self.nickname:
+            print 'You won'
+        else:
+            print "%s has lost" %response [-1]
+
+    def game_over(self,response):
+        if response[-1] == GAME_OVER:
+            print 'Game over'
 
 client = Client()
 try:
