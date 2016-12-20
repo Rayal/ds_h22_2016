@@ -12,6 +12,7 @@ import BattleShip_UI as BUI
 from protocol.common import *
 from time import sleep, time
 from game_logic import main
+from collections import defaultdict
 
 #def compile_servername(nickname, servername):
 # Client class to initiate client object --------------------------------------
@@ -30,7 +31,7 @@ class Client():
         self.waiting = False
         self.wait_time = 0
         self.waiting_since = 0
-        self.server_response = {}
+        self.server_response = defaultdict(lambda: NAY)
 
 # Start Client loop -----------------------------------------------------------
 
@@ -96,6 +97,10 @@ class Client():
             ret = self.connect_to_server()
         elif self.state == states.SERVER_CONNECTED:
             ret = self.get_game_list()
+        elif self.state == states.GAME_CONFIG:
+            ret = self.send_conf()
+        elif self.state == states.SET_SHIPS:
+            ret = self.set_ships()
         elif self.state == states.GAME_STARTED:
             ret = self.main()
         else:
@@ -192,26 +197,33 @@ class Client():
                 self.gameid = id
             else:
                 print("Can not connect to given gameid")
+                return states.RET_NOK
 
 # create a new game -----------------------------------------------------------
         else:
             newGameName = '_'.join(raw_input('Enter new gameName. ').split(' '))
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CREATE_GAME, self.self, newGameName)))
             sleep(DEFAULT_WAIT_TIME)
-            if self.server_response[self.state] != '':
-                newgameIDcreated = self.server_response[self.state]
-                print('Created Game:' + self.server_response[self.state])
+            if self.server_response[self.state] != NAY:
+                self.gameid = self.server_response[self.state]
+                print('Created Game:' + self.gameid)
             else:
                 print('No game created.')
-            newgameIDcreated = self.server_response[self.state]
-            #print newgameIDcreated
-            #newgame = [newgameIDcreated, newGameName]
-            self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, newgameIDcreated, ACK)))
+                return states.RET_NOK
 
+        self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid, self.self)))
+        self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid, ACK)))
 
-
-            self.gameid = newgameIDcreated
+        if id in self.server_response[self.state]:
             return states.RET_OK
+        return states.RET_ALT
+
+    def send_conf(self):
+        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)), ' '.join((GAME_SETUP, self.self, '10 10 5 4 3 3 2')))
+        sleep(DEFAULT_WAIT_TIME)
+        if self.server_response[self.state] == NAY:
+            return states.RET_RETRY
+        return states.RET_OK
 
 # Function game_list to get the response from the get_game_list function ------
     def game_list(self, response):
@@ -222,26 +234,31 @@ class Client():
 
 # Function created_game to get the response from the create_game (new) function
     def created_game(self, response):
-        self.server_response[self.state] = response[0]
+        self.server_response[self.state] = response
 
 # Function joined_game to get the response from the join_game (existing) function
     def joined_game(self, response):
         self.server_response[self.state] = response[0]
 
-    def main(self):
-        main(self)
-
-    def game_setup(self, userboard, ships):
-        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
-                     ' '.join((GAME_SETUP, SELF, userboard, ships['value'])))
+    def set_ships(self):
+        msg = main(self)
+        mqtt_publish(self.mqtt,
+                     '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
+                     ' '.join((SHIP_POS, self.self, msg)))
         sleep(DEFAULT_WAIT_TIME)
+        return states.RET_OK
 
-        if self.server_response[self.state] == YEA:
-            return states.RET_OK
+    def main(self):
         return states.RET_NOK
 
+    def game_setup_reply(self, response):
+        LOG.debug("Got setup reply: %s" % response)
+        self.server_response[self.state] = response
 
 
+    def ship_pos_reply(self, response):
+        LOG.debug("Got setup reply: %s" % response)
+        self.server_response[self.state] = response
 
 client = Client()
 try:

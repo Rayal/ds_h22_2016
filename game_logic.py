@@ -1,4 +1,5 @@
 import copy, random
+from protocol.common import *
 
 def print_board(s, board):
 
@@ -38,6 +39,7 @@ def print_board(s, board):
 
 
 def user_place_ships(board, ships):
+    d_ships = []
     for ship in ships.keys():
 
         # get coordinates from user and vlidate the postion
@@ -52,14 +54,15 @@ def user_place_ships(board, ships):
             if not valid:
                 print "Cannot place a ship there.\nPlease take a look at the board and try again."
                 raw_input("Hit ENTER to continue")
+            else:
+                d_ships.append((str(ships[ship]), str(y), str(x), HORIZONTAL if ori == 'h' else VERTICAL))
 
         # place the ship
         board = place_ship(board, ships[ship], ship[0], ori, x, y)
         print_board("u", board)
 
     raw_input("Done placing user ships. Hit ENTER to continue")
-    return board
-
+    return (board, d_ships)
 
 
 def place_ship(board, ship, s, ori, x, y):
@@ -151,6 +154,11 @@ def main(clientObj):
     user_board = copy.deepcopy(board)
 
     # ship placement
-    user_board = user_place_ships(user_board, ships)
+    user_board, ships = user_place_ships(user_board, ships)
 
     print_board("u", user_board)
+
+    msg = OBJ_SEP.join(
+        [SUB_OBJ_SEP.join(ship) for ship in ships]
+    )
+    return msg

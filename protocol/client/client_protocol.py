@@ -7,6 +7,7 @@ LOG = logging.getLogger()
 from protocol.common import *
 import protocol.client.global_functions as gf
 import protocol.client.client_functions as cf
+import protocol.client.game_functions as pf
 
 def message_in(client_obj, mqttclient, userdata, msg):
     if not msg.topic.startswith(DEFAULT_ROOT_TOPIC + "/"):
@@ -18,5 +19,6 @@ def message_in(client_obj, mqttclient, userdata, msg):
             gf.message_in(client_obj, mqttclient, topic[1:], msg.payload.split(" "))
         elif topic[0] == SERVER:
             cf.message_in(client_obj, mqttclient, topic[1:], msg.payload.split(" "))
-
+        elif topic[0] == GAME:
+            pf.message_in(client_obj, mqttclient, topic[1:], msg.payload.split(" "))
 
