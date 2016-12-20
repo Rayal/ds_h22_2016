@@ -189,6 +189,7 @@ class Client():
             sleep(DEFAULT_WAIT_TIME)
             if self.server_response[self.state] == id:
                 print("Connected to Game", id)
+                self.gameid = id
             else:
                 print("Can not connect to given gameid")
 
@@ -207,7 +208,10 @@ class Client():
             #newgame = [newgameIDcreated, newGameName]
             self.add_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, newgameIDcreated, ACK)))
 
-        return states.RET_OK
+
+
+            self.gameid = newgameIDcreated
+            return states.RET_OK
 
 # Function game_list to get the response from the get_game_list function ------
     def game_list(self, response):
@@ -226,7 +230,18 @@ class Client():
 
     def main(self):
         main(self)
-        return states.RET_OK
+
+    def game_setup(self, userboard, ships):
+        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
+                     ' '.join((GAME_SETUP, SELF, userboard, ships['value'])))
+        sleep(DEFAULT_WAIT_TIME)
+
+        if self.server_response[self.state] == YEA:
+            return states.RET_OK
+        return states.RET_NOK
+
+
+
 
 client = Client()
 try:
