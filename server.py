@@ -101,6 +101,12 @@ class Server():
             return True
         return False
 
+    def disconnect(self, client):
+        if not client in self.clients:
+            return
+        self.nicknames.remove(self.nicknames[self.clients.index(client)])
+        self.clients.remove(client)
+
     def get_game_list(self):
         LOG.debug(self.games)
         game_list = [game.to_str() for game in self.games]
@@ -178,8 +184,8 @@ class Server():
         if not game:
             return -2
 
-        client_name = args_list[0]
-        if not client_name in self.clients:
+        client = args_list[0]
+        if not client in self.clients:
             return -3
 
         player = self.nicknames[self.clients.index(client)]
