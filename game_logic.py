@@ -1,6 +1,7 @@
 import copy, random
 from protocol.common import *
 
+
 def print_board(s, board):
 
     for i in range(10):
@@ -154,11 +155,21 @@ def main(clientObj):
     user_board = copy.deepcopy(board)
 
     # ship placement
-    user_board, ships = user_place_ships(user_board, ships)
+    if DEBUG:
+        ships = [['5', '0', '0', '0'],
+                 ['4', '0', '1', '0'],
+                 ['3', '0', '2', '0'],
+                 ['3', '0', '3', '0'],
+                 ['2', '0', '4', '0']]
+        msg = OBJ_SEP.join(
+            [SUB_OBJ_SEP.join(ship) for ship in ships]
+        )
+    else:
+        user_board, ships = user_place_ships(user_board, ships)
 
-    print_board("u", user_board)
+        print_board("u", user_board)
 
-    msg = OBJ_SEP.join(
-        [SUB_OBJ_SEP.join(ship) for ship in ships]
-    )
+        msg = OBJ_SEP.join(
+            [SUB_OBJ_SEP.join(ship) for ship in ships]
+        )
     return msg

@@ -31,6 +31,7 @@ class Client():
         self.wait_time = 0
         self.waiting_since = 0
         self.server_response = defaultdict(lambda: NAY)
+        self.creator = False
 
 # Start Client loop -----------------------------------------------------------
 
@@ -148,7 +149,7 @@ class Client():
         print("Server list: " + ', '.join(self.servers))
         if DEBUG:
             self.server = 'DEBUG_S'
-            self.nickname = 'DEBUG_NAME'
+            self.nickname = 'DEUG_NAME'
         else:
             try:
                 self.server, self.nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
@@ -220,6 +221,7 @@ class Client():
             if self.server_response[self.state] != NAY:
                 self.gameid = self.server_response[self.state]
                 print('Created Game:' + self.gameid)
+                self.creator = True
             else:
                 print('No game created.')
                 return states.RET_NOK
@@ -287,7 +289,7 @@ class Client():
 
     '''Function to use the UI and call the functions of the game logic'''
     def main(self):
-        return states.RET_NOK
+        return states.RET_RETRY
 
     '''Function game_Setup_reply to get the response from the game_setup function
         @params: A response from the game_setup  function from the game_functions.py file as a "YEA" or "NAY"
@@ -309,13 +311,14 @@ class Client():
             Output : PLAYING state
         '''
 
-    def ready_to_start_reply(self, response):
-        LOG.debug("Got ready to start reply: %s" % response)
-        self.server_response[self.state] = response
-        if self.server_response[self.state] == READY_TO_START:
+    def start_game(self):
+        self.state = states.PLAYING
+
+    def ready_to_start_reply(self):
+        if self.creator:
+            LOG.debug("Got ready to start.")
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
-                         ' '.join((START_GAME, self.self)))
-            self.state = states.PLAYING
+                             ' '.join((START_GAME, self.self)))
 
     '''Function play_turn_reply to get the response from the play_turn function
         @params: A response from the play_turn function from the game_functions.py file as a "PLAY_TURN"

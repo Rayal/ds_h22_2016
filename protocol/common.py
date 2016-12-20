@@ -14,10 +14,10 @@ DEFAULT_SERVER_URL = "iot.eclipse.org"
 DEFAULT_ROOT_TOPIC = "DS2016_BATTLESHIP"
 DEFAULT_ROOT_LEN = len(DEFAULT_ROOT_TOPIC) + 1
 
-DEBUG = False
+DEBUG = True
 
 if DEBUG:
-    SELF = 'DEBUG_'
+    SELF = 'DBUG_'
 else:
     SELF = name + str(getpid())
 
