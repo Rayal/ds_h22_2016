@@ -2,11 +2,7 @@
 
 def print_board(s, board):
 
-    player = "Computer"
-    if s == "u":
-        player = "User"
 
-    print "The " + player + "'s board look like this: \n"
 
     # print the horizontal numbers
     print " ",
