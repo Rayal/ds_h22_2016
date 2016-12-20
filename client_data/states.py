@@ -4,6 +4,7 @@ SERVER_CONNECTED =  3
 GAME_CONFIG =       4
 SET_SHIPS =         5
 GAME_STARTED =      6
+PLAYING =           7
 
 states = {
     FIND_SERVERS:       'Find Servers',
@@ -11,7 +12,8 @@ states = {
     SERVER_CONNECTED:   'Connected to server',
     GAME_CONFIG:        'Send game configuration',
     SET_SHIPS:          'Set ship positions',
-    GAME_STARTED:       'Connected to a running game'
+    GAME_STARTED:       'Connected to a running game',
+    PLAYING:            'Start playing'
 }
 
 RET_OK =        100
@@ -49,9 +51,9 @@ state_transitions = {
     (RET_RETRY,     GAME_CONFIG):           GAME_CONFIG,
     (RET_OK,        SET_SHIPS):             GAME_STARTED,
     (RET_NOK,       SET_SHIPS):             SET_SHIPS,
-    (RET_OK,        GAME_STARTED):          GAME_STARTED,
-    (RET_NOK,       GAME_STARTED):          GAME_STARTED,
-    (RET_RETRY,     GAME_STARTED):          GAME_STARTED,
+    (RET_OK,        GAME_STARTED):          PLAYING,
+    (RET_NOK,       GAME_STARTED):          SET_SHIPS,
+    (RET_RETRY,     GAME_STARTED):          SET_SHIPS,
     (RET_WAIT,      GAME_STARTED):          GAME_STARTED,
     (RET_TIMEOUT,   GAME_STARTED):          GAME_STARTED
 }
