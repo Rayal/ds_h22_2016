@@ -72,22 +72,21 @@ class Game():
                     continue
                 mqtt_publish(
                     self.parent.client,
-                    '/'.join((DEFAULT_ROOT_TOPIC,
-                        GAME,
-                        self.parent.self,
-                        str(self.id),
-                        ACK)),
-                    ' '.join((
-                        GAME_SETUP,
-                        self.conf,
-                        READY_TO_START)))
-                        
+                    '/'.join(
+                        (DEFAULT_ROOT_TOPIC,
+                            GAME,
+                            self.parent.self,
+                            str(self.id),
+                            ACK)),
+                        START_GAME)
+                self.state = states.PLAY
+                self.start_game()
             elif self.state == states.PLAY:
                 self.playing = True
                 if len(self.activeplayers) == 1:
                     self.winner()
                 if self.turn_waiting:
-                    if int(time.time()) - self.turn_waiting_since >= wait_time:
+                    if int(time()) - self.turn_waiting_since >= self.turn_wait_time:
                         self.turn_timeout()
                     else:
                         continue
@@ -95,17 +94,22 @@ class Game():
                     self.send_turn(player)
                 self.turn_waiting = True
                 self.turn_wait_time = states.DEFAULT_TURN_SPEED
-                self.turn_waiting_since = int(time.time())
+                self.turn_waiting_since = int(time())
                 pass
             elif self.state == states.POST_PLAY:
                 pass
             else:
                 pass
+        print ('State', self.state)
         # Cleanup before destroying.
         mqtt_publish(self.parent.client,
             '/'.join((
-                DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id), ACK)),
-            'GAME_OVER', True)
+                    DEFAULT_ROOT_TOPIC,
+                    GAME,
+                    self.parent.self,
+                    str(self.id),
+                    ACK)),
+                'GAME_OVER', True)
         self.parent.remove_topic('/'.join((DEFAULT_ROOT_TOPIC, GAME, self.parent.self, str(self.id))))
         LOG.debug('Game %d thread ended.' % self.id)
         self.parent.remove_game(self)
@@ -132,7 +136,7 @@ class Game():
 
     def send_turn(self, player):
         self.player_moves[player] = (None, None, None)
-
+        print player
         mqtt_publish(self.parent.client,
             '/'.join((DEFAULT_ROOT_TOPIC,
                 GAME,
@@ -228,9 +232,6 @@ class Game():
         return 0
 
     def start_game(self):
-        self.last_action_time = int(time())
-        if self.state != states.WAITING_TO_START:
-            return False
         self.state = states.PLAY
         self.activeplayers = [] + self.players
         return True

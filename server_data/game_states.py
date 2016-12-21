@@ -1,7 +1,7 @@
 INIT =              1
 WAITING_TO_START =  2
-PLAY =              2
-POST_PLAY =         3
+PLAY =              3
+POST_PLAY =         4
 
 RET_OK =        100
 RET_NOK =       200

@@ -13,11 +13,15 @@ from protocol.common import *
 from time import sleep, time
 from game_logic import main
 from collections import defaultdict
+from sys import argv
 
 # Client class to instantiate client object -----------------------------------
 class Client():
     def __init__(self):
-        self.self = SELF + 'C'
+        if len(argv) > 1:
+            self.self = argv[-1]
+        else:
+            self.self = SELF + 'C'
         self.topics = []
         self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GLOBAL, self.self)))
 
@@ -106,6 +110,8 @@ class Client():
             ret = self.set_ships()
         elif self.state == states.GAME_STARTED:
             ret = self.main()
+        elif self.state == states.PLAYING:
+            ret = self.main()
         else:
             ret = states.RET_NOK
 
@@ -149,7 +155,10 @@ class Client():
         print("Server list: " + ', '.join(self.servers))
         if DEBUG:
             self.server = 'DEBUG_S'
-            self.nickname = 'DEUG_NAME'
+            if len(argv) > 1:
+                self.nickname = argv[-1] + 'name'
+            else:
+                self.nickname = 'DEBUG_NAME'
         else:
             try:
                 self.server, self.nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
@@ -215,12 +224,16 @@ class Client():
             '''
 
         else:
-            newGameName = '_'.join(raw_input('Enter new gameName. ').split(' '))
-            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CREATE_GAME, self.self, newGameName)))
+            newGameName = '_'.join(
+                raw_input('Enter new gameName. ').split(' '))
+            mqtt_publish(
+                self.mqtt,
+                '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)),
+                ' '.join((CREATE_GAME, self.self, newGameName)))
             sleep(DEFAULT_WAIT_TIME)
             if self.server_response[self.state] != NAY:
                 self.gameid = self.server_response[self.state]
-                print('Created Game:' + self.gameid)
+                print('Created Game: ' + self.gameid)
                 self.creator = True
             else:
                 print('No game created.')

@@ -93,6 +93,18 @@ class Server():
             return self.nicknames.index(n_nick)
         return -1
 
+    def client_from_nickname(self, nickname):
+        if not nickname in self.nicknames:
+            return ''
+
+        return self.clients[self.nicknames.index(nickname)]
+
+    def nickname_from_client(self, client):
+        if not client in self.clients:
+            return ''
+
+        return self.nicknames[self.clients.index(client)]
+
     # Return
     def new_client(self, n_client, n_nick):
         if not (self.client_exists(n_client) != self.nickname_exists(n_nick)):

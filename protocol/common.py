@@ -17,7 +17,7 @@ DEFAULT_ROOT_LEN = len(DEFAULT_ROOT_TOPIC) + 1
 DEBUG = True
 
 if DEBUG:
-    SELF = 'DBUG_'
+    SELF = 'DEBUG_'
 else:
     SELF = name + str(getpid())
 
