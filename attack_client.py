@@ -1,8 +1,4 @@
-
-
 def print_board(s, board):
-
-
 
     # print the horizontal numbers
     print " ",
@@ -105,7 +101,7 @@ oppo_board = [[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
              {'Submarine': 3, 'Battleship': 4, 'Patrol Boat': 2, 'Aircraft Carrier': 5, 'Destroyer': 3}
              ]
 
-def main(coordinate, isHit):
+def main_attack(coordinate, isHit):
 
     #isHit= 'hit'/'miss'
 
