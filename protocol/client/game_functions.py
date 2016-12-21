@@ -33,6 +33,8 @@ def message_in(client_obj, client, topic_list, payload_list):
         won(client_obj, client, topic_list, payload_list[1:])
     elif payload_list[0] == GAME_END and len(payload_list) >= 2:
         game_over(client_obj, client, topic_list, payload_list[1:])
+    elif payload_list[0] == PLAY_TURN:
+        play_turn(client_obj, client, topic_list, payload_list[1:])
     else:
         LOG.debug("Received message was too short.")
 
@@ -62,7 +64,7 @@ def start_game(client_obj, mqtt_client, topic_list, payload_list):
     client_obj.start_game()
 
 def play_turn(client_obj, mqtt_client, topic_list, payload_list):
-    client_obj.play_turn_reply(payload_list[-1])
+    client_obj.play_turn_reply()
 
 def shoot(client_obj, mqtt_client, topic_list, payload_list):
     response = client_obj.shoot_reply(topic_list[0], payload_list)

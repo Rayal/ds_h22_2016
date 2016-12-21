@@ -338,9 +338,8 @@ class Client():
 
          '''
 
-    def play_turn_reply(self,response):
-        LOG.debug("Play Turn reply: %s" % response)
-        self.server_response[self.state] = response
+    def play_turn_reply(self):
+        LOG.debug("Play Turn received")
         COR = raw_input('Enter coordinates. ')
         if self.server_response[self.state] == PLAY_TURN:
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
