@@ -347,7 +347,7 @@ class Client():
         LOG.debug("Play Turn received")
         while True:
             self.coor = raw_input('Enter the X and Y coordinates in the format X Y ')
-            self.coor = np.array(self.coor.split(' ')).astype(int))
+            self.coor = np.array(self.coor.split(' ')).astype(int)
             if not((self.coor < [1, 1]).all() or (self.coor > [10, 10]).all()):
                 break
             print('Coordinates out of boundaries. Try again.')
@@ -359,7 +359,7 @@ class Client():
         @params: A response from the shoot function from the game_functions.py file as a NAY, SPLASH or BOOM
         '''
     def shoot_reply(self,response):
-        LOG.critical("Shoot reply: %s" % response[-1])
+        LOG.debug("Shoot reply: %s" % response[-1])
         if response[-1] == NAY:
             return states.RET_RETRY
         elif response[-1] == SPLASH:
