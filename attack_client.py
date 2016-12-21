@@ -1,6 +1,6 @@
 
 
-def print_board(s, board):
+def load_board(s, board):
 
 
 
@@ -122,7 +122,7 @@ def main(coordinate, isHit):
 
     oppo_board = user_move(oppo_board, isHit)
 
-    print_board("c", oppo_board)
+    load_board("c", oppo_board)
 
 
 
