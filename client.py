@@ -14,6 +14,7 @@ from time import sleep, time
 from game_logic import main
 from collections import defaultdict
 from sys import argv
+from attack_client import main_attack
 
 # Client class to instantiate client object -----------------------------------
 class Client():
@@ -342,10 +343,10 @@ class Client():
 
     def play_turn_reply(self):
         LOG.debug("Play Turn received")
-        COR = raw_input('Enter coordinates. ')
+        self.COR = raw_input('Enter the X and Y coordinates in the format X Y ')
         if self.state == states.PLAYING:
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
-                         ' '.join((SHOOT, self.self, '0', COR)))
+                         ' '.join((SHOOT, self.self, '0', self.COR)))
 
         sleep(DEFAULT_WAIT_TIME)
         return states.RET_OK
@@ -361,8 +362,10 @@ class Client():
             return states.RET_RETRY
         elif self.server_response[self.state] == SPLASH:
             print ("MISSED SHOT")
+            main_attack(self.COR, "miss")
         elif self.server_response[self.state] == BOOM:
             print ("YAE...YOU GOT A HIT!")
+            main_attack(self.COR, "hit")
 
     '''Function hit to get response from the function hit in the game_functions.py file as a HIT or NOt
     '''
