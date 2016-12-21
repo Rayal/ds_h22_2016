@@ -202,13 +202,15 @@ class Client():
 
 
         id = '_'.join(raw_input('Select a gameID to join. Leave this space blank if you want to create your own. ').split(' '))
+        print id
         if id == '':
             return states.RET_RETRY
 
         '''JOIN THE EXISTING GAME from the list of games available ---------------------
         From the list of available games, the user inputs the id of the game he wants to join in
         '''
-        if id in self.server_response[self.state]:
+        game_ids = [g.split(' ')[0] for g in self.server_response[self.state].split('\n')]
+        if id in game_ids:
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((JOIN_GAME, self.self, id)))
             sleep(DEFAULT_WAIT_TIME)
             if self.server_response[self.state] == id:
@@ -341,7 +343,7 @@ class Client():
     def play_turn_reply(self):
         LOG.debug("Play Turn received")
         COR = raw_input('Enter coordinates. ')
-        if self.server_response[self.state] == PLAY_TURN:
+        if self.state == states.PLAYING:
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
                          ' '.join((SHOOT, self.self, '0', COR)))
 
