@@ -1,7 +1,7 @@
 # Setup Python logging --------------------------------------------------------
 import logging
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
-logging.basicConfig(level=logging.DEBUG,format=FORMAT)
+logging.basicConfig(level=logging.CRITICAL,format=FORMAT)
 LOG = logging.getLogger()
 
 # Imports ---------------------------------------------------------------------
@@ -9,6 +9,7 @@ import paho.mqtt.client as mqtt
 import protocol.client.client_protocol as cp
 import client_data.states as states
 import BattleShip_UI as BUI
+import numpy as np
 from protocol.common import *
 from time import sleep, time
 from game_logic import main
@@ -65,7 +66,7 @@ class Client():
             pass
 
         mqtt_publish(self.mqtt,
-            '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)),
+            '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.self)),
             ' '.join((DISCONNECT, self.self)))
 
         self.mqtt.disconnect()
@@ -338,40 +339,41 @@ class Client():
 
     '''Function play_turn_reply to get the response from the play_turn function
         @params: A response from the play_turn function from the game_functions.py file as a "PLAY_TURN"
-
          '''
 
     def play_turn_reply(self):
+        if self.state != states.PLAYING:
+            return
         LOG.debug("Play Turn received")
-        self.COR = raw_input('Enter the X and Y coordinates in the format X Y ')
-        if self.state == states.PLAYING:
-            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
-                         ' '.join((SHOOT, self.self, '0', self.COR)))
+        while True:
+            self.coor = raw_input('Enter the X and Y coordinates in the format X Y ')
+            self.coor = np.array(self.coor.split(' ')).astype(int))
+            if not((self.coor < [1, 1]).all() or (self.coor > [10, 10]).all()):
+                break
+            print('Coordinates out of boundaries. Try again.')
 
-        sleep(DEFAULT_WAIT_TIME)
-        return states.RET_OK
+        mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
+                     ' '.join((SHOOT, self.self, '0', str(self.coor).strip('[]'))))
 
     '''Function shoot_reply to get the response from the shoot function
-            @params: A response from the shoot function from the game_functions.py file as a NAY, SPLASH or BOOM
-
+        @params: A response from the shoot function from the game_functions.py file as a NAY, SPLASH or BOOM
         '''
     def shoot_reply(self,response):
-        LOG.debug("Shoot reply: %s" % response[-1])
-        self.server_response[self.state] = response[-1]
-        if self.server_response[self.state] == NAY:
+        LOG.critical("Shoot reply: %s" % response[-1])
+        if response[-1] == NAY:
             return states.RET_RETRY
-        elif self.server_response[self.state] == SPLASH:
+        elif response[-1] == SPLASH:
             print ("MISSED SHOT")
-            main_attack(self.COR, "miss")
-        elif self.server_response[self.state] == BOOM:
-            print ("YAE...YOU GOT A HIT!")
-            main_attack(self.COR, "hit")
+            main_attack(self.coor, "miss")
+        elif response[-1] == BOOM:
+            print ("YAY...YOU GOT A HIT!")
+            main_attack(self.coor, "hit")
 
     '''Function hit to get response from the function hit in the game_functions.py file as a HIT or NOt
     '''
-
     def hit(self, response):
-        print 'You have been hit by %s in: (%d:%d)'%((response[-1], int(response[0]) + 1, int(response[0]) + 1))
+        print response
+        print 'You have been hit by %s in: (%d,%d)'%((response[-1], int(response[0]) + 1, int(response[1]) + 1))
         #Do other stuff
 
     '''Function sunk to get response from the function sunk in the game_functions.py file if the ships sunk or not
@@ -385,24 +387,26 @@ class Client():
     '''Function lost to get response from the function lost in the game_functions.py file if the ships sunk and who lost
             '''
     def lost(self, response):
-        if response[-1] == self.nickname:
+        if response == self.nickname:
             print 'You lost'
         else:
-            print "%s has lost" %response [-1]
+            print "%s has lost" %response
 
     '''Function won to get response from the function won in the game_functions.py file if the ships sunk and who won
                 '''
     def won(self,response):
-        if response[-1] == self.nickname:
+        if response == self.nickname:
             print 'You won'
         else:
-            print "%s has lost" %response [-1]
+            print "%s has won" %response
+
+        self.close()
 
     '''Function game_over to get response from the function game_over in the game_functions.py file if the game is over
                 '''
-    def game_over(self,response):
-        if response[-1] == GAME_OVER:
-            print 'Game over'
+    def game_over(self):
+        print 'Game over'
+        self.stop()
 
 client = Client()
 try:

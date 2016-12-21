@@ -160,12 +160,12 @@ def main(clientObj):
                  ['3', '0', '2', '0'],
                  ['3', '0', '3', '0'],
                  ['2', '0', '4', '0']]
-        load_board("u", user_board)
         msg = OBJ_SEP.join(
             [SUB_OBJ_SEP.join(ship) for ship in ships]
         )
     else:
         user_board, ships = user_place_ships(user_board, ships)
+        load_board("u", user_board)
         msg = OBJ_SEP.join(
             [SUB_OBJ_SEP.join(ship) for ship in ships]
         )

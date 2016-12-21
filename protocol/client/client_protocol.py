@@ -1,7 +1,7 @@
 # Setup Python logging --------------------------------------------------------
 import logging
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
-logging.basicConfig(level=logging.DEBUG,format=FORMAT)
+logging.basicConfig(level=logging.CRITICAL,format=FORMAT)
 LOG = logging.getLogger()
 
 from protocol.common import *
@@ -21,4 +21,3 @@ def message_in(client_obj, mqttclient, userdata, msg):
             cf.message_in(client_obj, mqttclient, topic[1:], msg.payload.split(" "))
         elif topic[0] == GAME:
             pf.message_in(client_obj, mqttclient, topic[1:], msg.payload.split(" "))
-

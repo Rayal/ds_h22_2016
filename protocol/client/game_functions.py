@@ -1,7 +1,7 @@
 # Setup Python logging --------------------------------------------------------
 import logging
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
-logging.basicConfig(level=logging.DEBUG,format=FORMAT)
+logging.basicConfig(level=logging.CRITICAL,format=FORMAT)
 LOG = logging.getLogger()
 
 from protocol.common import *
@@ -21,7 +21,7 @@ def message_in(client_obj, client, topic_list, payload_list):
         ship_pos(client_obj, client, topic_list, payload_list[1:])
     elif payload_list[0] == START_GAME:
         start_game(client_obj, client, topic_list, payload_list[1:])
-    elif (payload_list[0] == SPLASH or payload_list[0] == BOOM or payload_list[0] == SHOOT) and len(payload_list) >= 2:
+    elif (payload_list[0] == SPLASH or payload_list[0] == BOOM or payload_list[0] == SHOOT):
         shoot(client_obj, client, topic_list, payload_list)
     elif payload_list[0] == HIT and len(payload_list) >= 2:
         hit(client_obj, client, topic_list, payload_list[1:])
@@ -31,8 +31,8 @@ def message_in(client_obj, client, topic_list, payload_list):
         lost(client_obj, client, topic_list, payload_list[1:])
     elif payload_list[0] == WON and len(payload_list) >= 2:
         won(client_obj, client, topic_list, payload_list[1:])
-    elif payload_list[0] == GAME_END and len(payload_list) >= 2:
-        game_over(client_obj, client, topic_list, payload_list[1:])
+    elif payload_list[0] == GAME_END:
+        game_over(client_obj, client, topic_list, payload_list)
     elif payload_list[0] == PLAY_TURN:
         play_turn(client_obj, client, topic_list, payload_list[1:])
     else:
@@ -67,10 +67,10 @@ def play_turn(client_obj, mqtt_client, topic_list, payload_list):
     client_obj.play_turn_reply()
 
 def shoot(client_obj, mqtt_client, topic_list, payload_list):
-    response = client_obj.shoot_reply(topic_list[0], payload_list)
+    response = client_obj.shoot_reply(payload_list)
 
 def hit(client_obj, mqtt_client, topic_list, payload_list):
-    client_obj.hit(payload_list[-1])
+    client_obj.hit(payload_list)
 
 def sunk(client_obj, mqtt_client, topic_list, payload_list):
     client_obj.sunk(payload_list[-1])
@@ -82,4 +82,4 @@ def won(client_obj, mqtt_client, topic_list, payload_list):
     client_obj.won(payload_list[-1])
 
 def game_over(client_obj, mqtt_client, topic_list, payload_list):
-    client_obj.game_over(payload_list[-1])
+    client_obj.game_over()

@@ -34,12 +34,9 @@ state_ret = {
 
 state_transitions = {
     (RET_OK,        FIND_SERVERS):          CONNECT_SERVER,
-    #(RET_NOK,       FIND_SERVERS):          FIND_SERVERS,
     (RET_RETRY,     FIND_SERVERS):          FIND_SERVERS,
     (RET_OK,        CONNECT_SERVER):        SERVER_CONNECTED,
     (RET_NOK,       CONNECT_SERVER):        FIND_SERVERS,
-    #(RET_RETRY,     CONNECT_SERVER):        CONNECT_SERVER,
-    #(RET_WAIT,      CONNECT_SERVER):        CONNECT_SERVER,
     (RET_TIMEOUT,   CONNECT_SERVER):        FIND_SERVERS,
     (RET_OK,        SERVER_CONNECTED):      SET_SHIPS,
     (RET_ALT,       SERVER_CONNECTED):      GAME_CONFIG,

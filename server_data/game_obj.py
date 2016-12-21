@@ -9,9 +9,9 @@ from time import sleep, time
 def get_ship(world, size, initial, horizontal):
     x1, y1 = initial
     if horizontal:
-        return world[y1][x1 + size]
+        return world[y1][x1:x1 + size]
     else:
-        return world.T[x1][y1 + size]
+        return world.T[x1][y1:y1 + size]
 
 def set_ship(world, args, horizontal):
     size, x1, y1 = args
@@ -234,7 +234,7 @@ class Game():
         self.moves[player] = True
         if self.boards[victim][coords[1]][coords[0]] != 0:
             self.shot_message(victim, coords, player)
-            self.check_sunk(victim, coords[:2])
+            self.check_sunk(victim, coords)
             return True
         return False
 
@@ -244,8 +244,9 @@ class Game():
             '/'.join((DEFAULT_ROOT_TOPIC,
                 GAME,
                 self.parent.self,
-                str(self.id),player)),
-            ' '.join((HIT, str(coords).strip('[]'), aggressor)))
+                str(self.id),
+                self.parent.client_from_nickname(player))),
+            ' '.join([HIT] + str(coords).strip('[]').split(', ') + [aggressor]))
 
     def sunk_message(self, ship, player):
         for player in self.players:
@@ -255,7 +256,7 @@ class Game():
                     GAME,
                     self.parent.self,
                     str(self.id),
-                    player)),
+                    self.parent.client_from_nickname(player))),
                 ' '.join((SUNK, str(ship), player)))
 
     def player_lost(self, player):
@@ -266,7 +267,7 @@ class Game():
                     GAME,
                     self.parent.self,
                     str(self.id),
-                    p)),
+                    self.parent.client_from_nickname(p))),
                 ' '.join((LOST, player)))
         self.activeplayers.remove(player)
 
@@ -278,23 +279,26 @@ class Game():
                     GAME,
                     self.parent.self,
                     str(self.id),
-                    player)),
+                    self.parent.client_from_nickname(player))),
                 ' '.join((WON, self.activeplayers[0])))
 
     def check_sunk(self, player, coords):
         n_x, n_y = coords
         d_ship = None
         for ship in self.player_ships[player]:
-            size, x, y, d = ship
+            size, x, y, d = ship.split(SUB_OBJ_SEP)
+            size = int(size)
+            x = int(x)
+            y = int(y)
+
             if d == HORIZONTAL:
                 if n_x >= x and (n_x < x + size) and n_y == y:
-                    d_ship = ship
+                    d_ship = [size, x, y, d]
                     break
             else:
                 if n_y >= y and (n_y < y + size) and n_x == x:
-                    d_ship = ship
+                    d_ship = [size, x, y, d]
                     break
-
 
         ship = list(get_ship(self.boards[player], d_ship[0], d_ship[1:-1], d_ship[-1] == HORIZONTAL))
 

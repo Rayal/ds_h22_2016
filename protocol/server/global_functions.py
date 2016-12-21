@@ -2,7 +2,7 @@
 import logging
 from sys import argv
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
-logging.basicConfig(level=logging.DEBUG,format=FORMAT)
+logging.basicConfig(level=logging.CRITICAL,format=FORMAT)
 LOG = logging.getLogger(argv[0])
 
 from protocol.common import *

@@ -1,7 +1,7 @@
 # Setup Python logging --------------------------------------------------------
 import logging
 FORMAT = '%(asctime)-15s %(levelname)s %(message)s'
-logging.basicConfig(level=logging.DEBUG,format=FORMAT)
+logging.basicConfig(level=logging.CRITICAL,format=FORMAT)
 LOG = logging.getLogger()
 
 from protocol.common import *
