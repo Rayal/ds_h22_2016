@@ -1,7 +1,7 @@
 import copy, random
 from protocol.common import *
 
-def print_board(s, board):
+def load_board(s, board):
 
     for i in range(10):
         print "  " + str(i + 1) + "  ",
@@ -46,7 +46,7 @@ def user_place_ships(board, ships):
         valid = False
         while (not valid):
 
-            print_board("u", board)
+            load_board("u", board)
             print "Placing a " + ship
             x, y = get_coor()
             ori = v_or_h()
@@ -59,7 +59,7 @@ def user_place_ships(board, ships):
 
         # place the ship
         board = place_ship(board, ships[ship], ship[0], ori, x, y)
-        print_board("u", board)
+        load_board("u", board)
 
     raw_input("Done placing user ships. Hit ENTER to continue")
     return (board, d_ships)
@@ -156,7 +156,7 @@ def main(clientObj):
     # ship placement
     user_board, ships = user_place_ships(user_board, ships)
 
-    print_board("u", user_board)
+    load_board("u", user_board)
 
     msg = OBJ_SEP.join(
         [SUB_OBJ_SEP.join(ship) for ship in ships]
