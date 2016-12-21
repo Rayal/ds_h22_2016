@@ -93,6 +93,18 @@ class Server():
             return self.nicknames.index(n_nick)
         return -1
 
+    def client_from_nickname(self, nickname):
+        if not nickname in self.nicknames:
+            return ''
+
+        return self.clients[self.nicknames.index(nickname)]
+
+    def nickname_from_client(self, client):
+        if not client in self.clients:
+            return ''
+
+        return self.nicknames[self.clients.index(client)]
+
     # Return
     def new_client(self, n_client, n_nick):
         if not (self.client_exists(n_client) != self.nickname_exists(n_nick)):
@@ -197,22 +209,22 @@ class Server():
         return res
 
     def start_game(self, game_id, args_list):
-        game = self.game_from_id(game_id)
+        game = self.game_from_id(game_id, self.games)
         if not game:
             return False
         return game.start_game()
 
     def shoot(self, game_id, args_list):
-        client_name = args_list[0]
-        if not client_name in self.clients:
-            return
+        client = args_list[0]
+        if not client in self.clients:
+            return None
         player = self.nicknames[self.clients.index(client)]
 
-        game = self.game_from_id(game_id)
+        game = self.game_from_id(game_id, self.games)
         if not game:
-            return
+            return None
 
-        game.shoot(player, args_list[2:], args_list[1])
+        return game.shoot(player, args_list[2:])
 
 if len(argv) >= 2:
     server = Server(argv[1])

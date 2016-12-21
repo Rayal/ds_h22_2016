@@ -13,11 +13,16 @@ from protocol.common import *
 from time import sleep, time
 from game_logic import main
 from collections import defaultdict
+from sys import argv
+from attack_client import main_attack
 
 # Client class to instantiate client object -----------------------------------
 class Client():
     def __init__(self):
-        self.self = SELF + 'C'
+        if len(argv) > 1:
+            self.self = argv[-1]
+        else:
+            self.self = SELF + 'C'
         self.topics = []
         self.topics.append("/".join((DEFAULT_ROOT_TOPIC, GLOBAL, self.self)))
 
@@ -31,6 +36,7 @@ class Client():
         self.wait_time = 0
         self.waiting_since = 0
         self.server_response = defaultdict(lambda: NAY)
+        self.creator = False
 
 # Start Client loop -----------------------------------------------------------
 
@@ -105,6 +111,8 @@ class Client():
             ret = self.set_ships()
         elif self.state == states.GAME_STARTED:
             ret = self.main()
+        elif self.state == states.PLAYING:
+            ret = self.main()
         else:
             ret = states.RET_NOK
 
@@ -148,7 +156,10 @@ class Client():
         print("Server list: " + ', '.join(self.servers))
         if DEBUG:
             self.server = 'DEBUG_S'
-            self.nickname = 'DEBUG_NAME'
+            if len(argv) > 1:
+                self.nickname = argv[-1] + 'name'
+            else:
+                self.nickname = 'DEBUG_NAME'
         else:
             try:
                 self.server, self.nickname = raw_input('Select server to connect to and give a nickname. ').split(' ')
@@ -192,13 +203,15 @@ class Client():
 
 
         id = '_'.join(raw_input('Select a gameID to join. Leave this space blank if you want to create your own. ').split(' '))
+        print id
         if id == '':
             return states.RET_RETRY
 
         '''JOIN THE EXISTING GAME from the list of games available ---------------------
         From the list of available games, the user inputs the id of the game he wants to join in
         '''
-        if id in self.server_response[self.state]:
+        game_ids = [g.split(' ')[0] for g in self.server_response[self.state].split('\n')]
+        if id in game_ids:
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((JOIN_GAME, self.self, id)))
             sleep(DEFAULT_WAIT_TIME)
             if self.server_response[self.state] == id:
@@ -214,12 +227,17 @@ class Client():
             '''
 
         else:
-            newGameName = '_'.join(raw_input('Enter new gameName. ').split(' '))
-            mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)), ' '.join((CREATE_GAME, self.self, newGameName)))
+            newGameName = '_'.join(
+                raw_input('Enter new gameName. ').split(' '))
+            mqtt_publish(
+                self.mqtt,
+                '/'.join((DEFAULT_ROOT_TOPIC, SERVER, self.server)),
+                ' '.join((CREATE_GAME, self.self, newGameName)))
             sleep(DEFAULT_WAIT_TIME)
             if self.server_response[self.state] != NAY:
                 self.gameid = self.server_response[self.state]
-                print('Created Game:' + self.gameid)
+                print('Created Game: ' + self.gameid)
+                self.creator = True
             else:
                 print('No game created.')
                 return states.RET_NOK
@@ -287,7 +305,7 @@ class Client():
 
     '''Function to use the UI and call the functions of the game logic'''
     def main(self):
-        return states.RET_NOK
+        return states.RET_RETRY
 
     '''Function game_Setup_reply to get the response from the game_setup function
         @params: A response from the game_setup  function from the game_functions.py file as a "YEA" or "NAY"
@@ -309,26 +327,26 @@ class Client():
             Output : PLAYING state
         '''
 
-    def ready_to_start_reply(self, response):
-        LOG.debug("Got ready to start reply: %s" % response)
-        self.server_response[self.state] = response
-        if self.server_response[self.state] == READY_TO_START:
+    def start_game(self):
+        self.state = states.PLAYING
+
+    def ready_to_start_reply(self):
+        if self.creator:
+            LOG.debug("Got ready to start.")
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
-                         ' '.join((START_GAME, self.self)))
-            self.state = states.PLAYING
+                             ' '.join((START_GAME, self.self)))
 
     '''Function play_turn_reply to get the response from the play_turn function
         @params: A response from the play_turn function from the game_functions.py file as a "PLAY_TURN"
 
          '''
 
-    def play_turn_reply(self,response):
-        LOG.debug("Play Turn reply: %s" % response)
-        self.server_response[self.state] = response
-        COR = raw_input('Enter coordinates. ')
-        if self.server_response[self.state] == PLAY_TURN:
+    def play_turn_reply(self):
+        LOG.debug("Play Turn received")
+        self.COR = raw_input('Enter the X and Y coordinates in the format X Y ')
+        if self.state == states.PLAYING:
             mqtt_publish(self.mqtt, '/'.join((DEFAULT_ROOT_TOPIC, GAME, self.server, self.gameid)),
-                         ' '.join((SHOOT, self.self, '0', COR)))
+                         ' '.join((SHOOT, self.self, '0', self.COR)))
 
         sleep(DEFAULT_WAIT_TIME)
         return states.RET_OK
@@ -344,8 +362,10 @@ class Client():
             return states.RET_RETRY
         elif self.server_response[self.state] == SPLASH:
             print ("MISSED SHOT")
+            main_attack(self.COR, "miss")
         elif self.server_response[self.state] == BOOM:
             print ("YAE...YOU GOT A HIT!")
+            main_attack(self.COR, "hit")
 
     '''Function hit to get response from the function hit in the game_functions.py file as a HIT or NOt
     '''

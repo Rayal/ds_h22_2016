@@ -13,12 +13,14 @@ def message_in(client_obj, client, topic_list, payload_list):
         LOG.debug("Received message of unknown type")
         return
 
-    if payload_list[0] == GAME_SETUP and len(payload_list) >= 2:
+    if payload_list[-1] == READY_TO_START and len(payload_list) >= 2:
+        ready_to_start(client_obj, client, topic_list, payload_list[1:])
+    elif payload_list[0] == GAME_SETUP and len(payload_list) >= 2:
         game_setup(client_obj, client, topic_list, payload_list[1:])
     elif payload_list[0] == SHIP_POS and len(payload_list) >= 2:
         ship_pos(client_obj, client, topic_list, payload_list[1:])
-    elif payload_list[0] == READY_TO_START and len(payload_list) >= 2:
-        ready_to_start(client_obj, client, topic_list, payload_list[1:])
+    elif payload_list[0] == START_GAME:
+        start_game(client_obj, client, topic_list, payload_list[1:])
     elif (payload_list[0] == SPLASH or payload_list[0] == BOOM or payload_list[0] == SHOOT) and len(payload_list) >= 2:
         shoot(client_obj, client, topic_list, payload_list)
     elif payload_list[0] == HIT and len(payload_list) >= 2:
@@ -31,6 +33,8 @@ def message_in(client_obj, client, topic_list, payload_list):
         won(client_obj, client, topic_list, payload_list[1:])
     elif payload_list[0] == GAME_END and len(payload_list) >= 2:
         game_over(client_obj, client, topic_list, payload_list[1:])
+    elif payload_list[0] == PLAY_TURN:
+        play_turn(client_obj, client, topic_list, payload_list[1:])
     else:
         LOG.debug("Received message was too short.")
 
@@ -54,10 +58,13 @@ def ship_pos(client_obj, mqtt_client, topic_list, payload_list):
     client_obj.ship_pos_reply(payload_list[-1])
 
 def ready_to_start(client_obj, mqtt_client, topic_list, payload_list):
-    client_obj.ready_to_start_reply(payload_list[-1])
+    client_obj.ready_to_start_reply()
+
+def start_game(client_obj, mqtt_client, topic_list, payload_list):
+    client_obj.start_game()
 
 def play_turn(client_obj, mqtt_client, topic_list, payload_list):
-    client_obj.play_turn_reply(payload_list[-1])
+    client_obj.play_turn_reply()
 
 def shoot(client_obj, mqtt_client, topic_list, payload_list):
     response = client_obj.shoot_reply(topic_list[0], payload_list)

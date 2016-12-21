@@ -90,3 +90,9 @@ def start_game(server_obj, mqtt_client, topic_list, payload_list):
 
 def shoot(server_obj, mqtt_client, topic_list, payload_list):
     response = server_obj.shoot(topic_list[0], payload_list)
+    if response == False:
+        mqtt_publish(mqtt_client, "/".join((DEFAULT_ROOT_TOPIC, GAME, server_obj.self, topic_list[0], payload_list[0])), SPLASH)
+    elif response == True:
+        mqtt_publish(mqtt_client, "/".join((DEFAULT_ROOT_TOPIC, GAME, server_obj.self, topic_list[0], payload_list[0])), BOOM)
+    else:
+        mqtt_publish(mqtt_client, "/".join((DEFAULT_ROOT_TOPIC, GAME, server_obj.self, topic_list[0], payload_list[0])), "%s %s"%(SHOOT, NAY))

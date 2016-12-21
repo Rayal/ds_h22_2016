@@ -53,8 +53,12 @@ state_transitions = {
     (RET_NOK,       SET_SHIPS):             SET_SHIPS,
     (RET_OK,        GAME_STARTED):          PLAYING,
     (RET_NOK,       GAME_STARTED):          SET_SHIPS,
-    (RET_RETRY,     GAME_STARTED):          SET_SHIPS,
+    (RET_RETRY,     GAME_STARTED):          GAME_STARTED,
     (RET_WAIT,      GAME_STARTED):          GAME_STARTED,
-    (RET_TIMEOUT,   GAME_STARTED):          GAME_STARTED
+    (RET_TIMEOUT,   GAME_STARTED):          GAME_STARTED,
+    (RET_OK,        PLAYING):               PLAYING,
+    (RET_NOK,       PLAYING):               PLAYING,
+    (RET_RETRY,     PLAYING):               PLAYING,
+    (RET_WAIT,      PLAYING):               PLAYING,
+    (RET_TIMEOUT,   PLAYING):               PLAYING
 }
-
